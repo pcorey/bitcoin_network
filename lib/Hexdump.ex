@@ -5,15 +5,15 @@ defmodule Hexdump do
     |> Enum.chunk_every(16)
     |> Enum.map(&Enum.chunk_every(&1, 8))
     |> Enum.map(fn
-      [one] -> [one, []]
-      [one, two] -> [one, two]
+      [a] -> [a, []]
+      [a, b] -> [a, b]
     end)
     |> Enum.with_index()
     |> Enum.map(&print_line/1)
     |> Enum.join("\n")
   end
 
-  def to_string(data), do: IO.inspect(data)
+  def to_string(data), do: Kernel.inspect(data)
 
   def print_line({parts, index}) do
     count =
