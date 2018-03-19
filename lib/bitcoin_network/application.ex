@@ -1,20 +1,26 @@
 defmodule BitcoinNetwork.Application do
-  # See https://hexdocs.pm/elixir/Application.html
-  # for more information on OTP Applications
   @moduledoc false
 
   use Application
 
   def start(_type, _args) do
-    # List all child processes to be supervised
     children = [
-      # Starts a worker by calling: BitcoinNetwork.Worker.start_link(arg)
-      # {BitcoinNetwork.Worker, arg},
+      {
+        DynamicSupervisor,
+        strategy: :one_for_one, name: BitcoinNetwork.NodeSupervisor
+      },
+      {
+        Registry,
+        keys: :unique, name: BitcoinNetwork.NodeRegistry
+      }
     ]
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: BitcoinNetwork.Supervisor]
+    opts = [
+      strategy: :one_for_one,
+      name: BitcoinNetwork.Application
+    ]
+
     Supervisor.start_link(children, opts)
+    BitcoinNetwork.connect("127.0.0.1", 18333)
   end
 end

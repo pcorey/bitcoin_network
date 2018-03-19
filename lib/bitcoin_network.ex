@@ -3,16 +3,10 @@ defmodule BitcoinNetwork do
   Documentation for BitcoinNetwork.
   """
 
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> BitcoinNetwork.hello
-      :world
-
-  """
-  def hello do
-    :world
+  def connect(ip, port) do
+    DynamicSupervisor.start_child(
+      BitcoinNetwork.NodeSupervisor,
+      {BitcoinNetwork.Node, {ip, port}}
+    )
   end
 end
