@@ -4,7 +4,7 @@ defmodule BitcoinNetwork.Node do
   use GenServer
 
   alias BitcoinNetwork.Protocol
-  alias BitcoinNetwork.Protocol.{Message, Version}
+  alias BitcoinNetwork.Protocol.{Addr, Message, Version}
 
   def start_link({ip, port}) do
     GenServer.start_link(
@@ -51,7 +51,7 @@ defmodule BitcoinNetwork.Node do
     version =
       message
       |> Map.get(:payload)
-      |> BitcoinNetwork.Protocol.Version.parse()
+      |> Version.parse()
 
     :ok =
       Message.serialize("verack")
@@ -62,6 +62,31 @@ defmodule BitcoinNetwork.Node do
       Message.serialize("getaddr")
       |> print_message(state, [:yellow])
       |> send_message(state.socket)
+
+    {:noreply, state}
+  end
+
+  def handle_cast({:message, data = <<_magic::32, "addr", _::binary>>}, state) do
+    print_message(data, state, [:green])
+
+    {:ok, message} = Message.parse(data)
+
+    addr =
+      message
+      |> Map.get(:payload)
+      |> Addr.parse()
+
+    IO.puts("addrrr #{inspect(addr)}")
+
+    # :ok =
+    #   Message.serialize("verack")
+    #   |> print_message(state, [:yellow])
+    #   |> send_message(state.socket)
+
+    # :ok =
+    #   Message.serialize("getaddr")
+    #   |> print_message(state, [:yellow])
+    #   |> send_message(state.socket)
 
     {:noreply, state}
   end

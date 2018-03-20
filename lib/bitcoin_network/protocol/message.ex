@@ -5,8 +5,6 @@ defmodule BitcoinNetwork.Protocol.Message do
   alias BitcoinNetwork.Protocol.{Message, Version}
 
   def parse(binary) do
-    <<magic::32-little, command::binary-size(12), rest::binary>> = binary
-
     with <<magic::32-little, rest::binary>> <- binary,
          <<command::binary-size(12), rest::binary>> <- rest,
          <<size::32-little, rest::binary>> <- rest,
