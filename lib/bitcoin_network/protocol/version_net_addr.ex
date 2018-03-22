@@ -3,7 +3,7 @@ defmodule BitcoinNetwork.Protocol.VersionNetAddr do
 
   alias BitcoinNetwork.Protocol.VersionNetAddr
 
-  def parse(<<services::64-little, ip::128-big, port::16-big, rest::binary>>) do
+  def parse(<<services::64-little, ip::binary-size(16), port::16-big, rest::binary>>) do
     {:ok, %VersionNetAddr{services: services, ip: ip, port: port}, rest}
   end
 end

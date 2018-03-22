@@ -9,13 +9,13 @@ defmodule Hexdump do
       [a, b] -> [a, b]
     end)
     |> Enum.with_index()
-    |> Enum.map(&print_line/1)
+    |> Enum.map(&line_to_string/1)
     |> Enum.join("\n")
   end
 
   def to_string(data), do: Kernel.inspect(data)
 
-  def print_line({parts, index}) do
+  def line_to_string({parts, index}) do
     count =
       index
       |> Kernel.*(16)

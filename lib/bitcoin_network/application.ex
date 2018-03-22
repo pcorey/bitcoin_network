@@ -20,7 +20,8 @@ defmodule BitcoinNetwork.Application do
       name: BitcoinNetwork.Application
     ]
 
+    :observer.start()
     Supervisor.start_link(children, opts)
-    BitcoinNetwork.connect("127.0.0.1", 18333)
+    BitcoinNetwork.connect(<<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF, 0xFF, 127, 0, 0, 1>>, 18333)
   end
 end

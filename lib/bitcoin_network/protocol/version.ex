@@ -14,9 +14,7 @@ defmodule BitcoinNetwork.Protocol.Version do
   import ShortMaps
 
   def parse(binary) do
-    with <<version::32-little, rest::binary>> <- binary,
-         <<services::64-little, rest::binary>> <- rest,
-         <<timestamp::64-little, rest::binary>> <- rest,
+    with <<version::32-little, services::64-little, timestamp::64-little, rest::binary>> <- binary,
          {:ok, %VersionNetAddr{ip: recv_ip, port: recv_port}, rest} <- VersionNetAddr.parse(rest),
          {:ok, %VersionNetAddr{ip: from_ip, port: from_port}, rest} <- VersionNetAddr.parse(rest),
          <<nonce::64-little, rest::binary>> <- rest,

@@ -1,22 +1,30 @@
 defmodule BitcoinNetwork.Protocol.Message do
-  defstruct magic: nil, command: nil, checksum: nil, payload: nil
+  defstruct magic: nil, command: nil, size: nil, checksum: nil, payload: nil
 
   alias BitcoinNetwork.Protocol
   alias BitcoinNetwork.Protocol.{Message, Version}
 
   def parse(binary) do
-    with <<magic::32-little, rest::binary>> <- binary,
-         <<command::binary-size(12), rest::binary>> <- rest,
-         <<size::32-little, rest::binary>> <- rest,
-         <<checksum::32-big, rest::binary>> <- rest,
-         <<payload::binary-size(size), rest::binary>> <- rest do
+    with <<
+           magic::32-little,
+           command::binary-size(12),
+           size::32-little,
+           checksum::32-big,
+           payload::binary-size(size),
+           rest::binary
+         >> <- binary do
       {:ok,
        %Message{
          magic: magic,
-         command: command,
+         command:
+           command
+           |> :binary.bin_to_list()
+           |> Enum.reject(&(&1 == 0))
+           |> :binary.list_to_bin(),
+         size: size,
          checksum: checksum,
          payload: parse_payload(command, payload)
-       }}
+       }, rest}
     else
       _ -> nil
     end
@@ -44,9 +52,7 @@ defmodule BitcoinNetwork.Protocol.Message do
     })
   end
 
-  def verify_checksum(
-        <<_magic::32, _command::96, size::32-little, checksum::32, payload::binary>>
-      ) do
+  def verify_checksum(%Message{size: size, checksum: checksum, payload: payload}) do
     checksum(payload) == checksum && byte_size(payload) == size
   end
 
