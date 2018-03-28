@@ -10,10 +10,11 @@ defmodule BitcoinNetwork.Node do
   end
 
   def init(state = %{ip: ip, port: port}) do
-    [:bright, "Connecting to #{ip_binary_to_string(ip)}:#{port}."]
+    [:bright, "Connecting to #{BitcoinNetwork.IP.to_string(ip)}:#{port}."]
     |> log()
 
-    {:ok, socket} = :gen_tcp.connect(ip_binary_to_tuple(ip), port, [:binary, active: true])
+    {:ok, socket} =
+      :gen_tcp.connect(BitcoinNetwork.IP.to_tuple(ip), port, [:binary, active: true])
 
     :ok =
       Message.serialize("version", %Version{
@@ -28,7 +29,6 @@ defmodule BitcoinNetwork.Node do
         user_agent: "Elixir rules!",
         start_height: 1
       })
-      |> print_message([:bright, :yellow])
       |> send_message(socket)
 
     {:ok,
@@ -40,12 +40,10 @@ defmodule BitcoinNetwork.Node do
   def handle_cast(%Message{command: "version"}, state) do
     :ok =
       Message.serialize("verack")
-      |> print_message([:bright, :yellow])
       |> send_message(state.socket)
 
     :ok =
       Message.serialize("getaddr")
-      |> print_message([:bright, :yellow])
       |> send_message(state.socket)
 
     {:noreply, state}
@@ -86,7 +84,6 @@ defmodule BitcoinNetwork.Node do
 
     :ok =
       Message.serialize("pong")
-      |> print_message([:bright, :yellow])
       |> send_message(state.socket)
 
     {:noreply, state}
@@ -108,24 +105,6 @@ defmodule BitcoinNetwork.Node do
 
   def handle_info({:tcp_closed, _port}, state) do
     {:noreply, state}
-  end
-
-  defp ip_binary_to_string(binary) do
-    binary
-    |> :binary.bin_to_list()
-    |> Enum.chunk_every(4)
-    |> Enum.map(&:binary.list_to_bin/1)
-    |> Enum.map(&Base.encode16/1)
-    |> Enum.join(":")
-  end
-
-  defp ip_binary_to_tuple(binary) do
-    binary
-    |> :binary.bin_to_list()
-    |> Enum.chunk_every(2)
-    |> Enum.map(&:binary.list_to_bin/1)
-    |> Enum.map(&:binary.decode_unsigned/1)
-    |> List.to_tuple()
   end
 
   defp chunk(binary, messages \\ []) do
@@ -156,5 +135,8 @@ defmodule BitcoinNetwork.Node do
     |> IO.puts()
   end
 
-  defp send_message(message, socket), do: :gen_tcp.send(socket, message)
+  defp send_message(message, socket) do
+    print_message(message, [:bright, :yellow])
+    :gen_tcp.send(socket, message)
+  end
 end
