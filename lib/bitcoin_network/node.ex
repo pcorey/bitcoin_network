@@ -3,16 +3,13 @@
 defmodule BitcoinNetwork.Node do
   use GenServer
 
-  alias BitcoinNetwork.Protocol.{Addr, Message, Version}
+  alias BitcoinNetwork.Protocol.{Addr, Message, Ping, Version}
 
   def start_link({ip, port}) do
     GenServer.start_link(__MODULE__, %{ip: ip, port: port})
   end
 
   def init(state = %{ip: ip, port: port}) do
-    [:bright, "Connecting to #{BitcoinNetwork.IP.to_string(ip)}:#{port}."]
-    |> log()
-
     {:ok, socket} =
       :gen_tcp.connect(BitcoinNetwork.IP.to_tuple(ip), port, [:binary, active: true])
 
@@ -37,74 +34,49 @@ defmodule BitcoinNetwork.Node do
      |> Map.put_new(:rest, "")}
   end
 
-  def handle_cast(%Message{command: "version"}, state) do
-    :ok =
-      Message.serialize("verack")
-      |> send_message(state.socket)
-
-    :ok =
-      Message.serialize("getaddr")
-      |> send_message(state.socket)
-
-    {:noreply, state}
-  end
-
-  def handle_cast(%Message{command: "verack"}, state) do
-    [:bright, "Got ", :green, "verack", :reset, :bright, "."]
-    |> log()
-
-    {:noreply, state}
-  end
-
-  def handle_cast(%Message{command: "addr", payload: payload}, state) do
-    {:ok, addr} = Addr.parse(payload)
-
-    [:bright, "Received ", :green, "#{length(addr.addr_list)}", :reset, :bright, " peers."]
-    |> log()
-
-    {:noreply, state}
-  end
-
-  def handle_cast(%Message{command: "ping"}, state) do
-    [
-      :bright,
-      "Got ",
-      :green,
-      "ping",
-      :reset,
-      :bright,
-      ", sending ",
-      :yellow,
-      "pong",
-      :reset,
-      :bright,
-      "."
-    ]
-    |> log()
-
-    :ok =
-      Message.serialize("pong")
-      |> send_message(state.socket)
-
-    {:noreply, state}
-  end
-
-  def handle_cast(%Message{}, state) do
-    {:noreply, state}
-  end
-
   def handle_info({:tcp, _port, data}, state = %{rest: rest}) do
     {messages, rest} = chunk(rest <> data)
 
     messages
     |> Enum.filter(&Message.verify_checksum/1)
-    |> Enum.map(&GenServer.cast(self(), &1))
+    |> Enum.map(& &1.parsed_payload)
+    |> Enum.map(&handle_payload/1)
+    |> List.flatten()
+    |> Enum.reduce(:ok, fn message, :ok ->
+      send_message(message, state.socket)
+    end)
 
     {:noreply, %{state | rest: rest}}
   end
 
   def handle_info({:tcp_closed, _port}, state) do
     {:noreply, state}
+  end
+
+  defp handle_payload(%Version{}) do
+    [
+      Message.serialize("verack"),
+      Message.serialize("getaddr")
+    ]
+  end
+
+  defp handle_payload(%Ping{}) do
+    [
+      Message.serialize("pong")
+    ]
+  end
+
+  defp handle_payload(%Addr{addr_list: addr_list}) do
+    IO.puts("hi")
+
+    [:bright, "Received ", :green, "#{length(addr_list)}", :reset, :bright, " peers."]
+    |> log()
+
+    []
+  end
+
+  defp handle_payload(_) do
+    []
   end
 
   defp chunk(binary, messages \\ []) do
@@ -117,18 +89,6 @@ defmodule BitcoinNetwork.Node do
     end
   end
 
-  defp print_message(data, colors) do
-    output =
-      data
-      |> Hexdump.to_string()
-
-    (colors ++ ("\n" <> output <> "\n"))
-    |> IO.ANSI.format()
-    |> IO.puts()
-
-    data
-  end
-
   defp log(message) do
     [:bright, :black, "[#{inspect(self())}] ", :reset, message]
     |> IO.ANSI.format()
@@ -136,7 +96,10 @@ defmodule BitcoinNetwork.Node do
   end
 
   defp send_message(message, socket) do
-    print_message(message, [:bright, :yellow])
+    message
+    |> Hexdump.to_string()
+    |> IO.puts()
+
     :gen_tcp.send(socket, message)
   end
 end

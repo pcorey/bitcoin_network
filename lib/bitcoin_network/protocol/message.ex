@@ -1,8 +1,8 @@
 defmodule BitcoinNetwork.Protocol.Message do
-  defstruct magic: nil, command: nil, size: nil, checksum: nil, payload: nil
+  defstruct magic: nil, command: nil, size: nil, checksum: nil, payload: nil, parsed_payload: nil
 
   alias BitcoinNetwork.Protocol
-  alias BitcoinNetwork.Protocol.{Message, Version}
+  alias BitcoinNetwork.Protocol.{Addr, Message, Ping, Verack, Version}
 
   def parse(binary) do
     with <<
@@ -12,7 +12,8 @@ defmodule BitcoinNetwork.Protocol.Message do
            checksum::32-big,
            payload::binary-size(size),
            rest::binary
-         >> <- binary do
+         >> <- binary,
+         {:ok, parsed_payload, _} <- parse_payload(command, payload) do
       {:ok,
        %Message{
          magic: magic,
@@ -23,18 +24,24 @@ defmodule BitcoinNetwork.Protocol.Message do
            |> :binary.list_to_bin(),
          size: size,
          checksum: checksum,
-         payload: parse_payload(command, payload)
+         payload: payload,
+         parsed_payload: parsed_payload
        }, rest}
     else
       _ -> nil
     end
   end
 
-  def parse_payload("version", payload) do
-    Version.parse(payload)
-  end
+  def parse_payload("addr" <> _, payload), do: Addr.parse(payload)
+  def parse_payload("ping" <> _, payload), do: Ping.parse(payload)
+  def parse_payload("verack" <> _, payload), do: Verack.parse(payload)
+  def parse_payload("version" <> _, payload), do: Version.parse(payload)
 
-  def parse_payload(_, payload), do: payload
+  def parse_payload(command, payload) do
+    IO.puts("got command #{command}")
+
+    {:ok, payload}
+  end
 
   def serialize(command, payload \\ <<>>)
 
