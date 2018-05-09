@@ -37,10 +37,8 @@ defmodule BitcoinNetwork.Protocol.Message do
   def parse_payload("verack" <> _, payload), do: Verack.parse(payload)
   def parse_payload("version" <> _, payload), do: Version.parse(payload)
 
-  def parse_payload(command, payload) do
-    IO.puts("got command #{command}")
-
-    {:ok, payload}
+  def parse_payload(_command, payload) do
+    {:ok, payload, <<>>}
   end
 
   def serialize(command, payload \\ <<>>)

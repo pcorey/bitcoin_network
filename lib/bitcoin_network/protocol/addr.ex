@@ -4,11 +4,7 @@ defmodule BitcoinNetwork.Protocol.Addr do
   alias BitcoinNetwork.Protocol.{Addr, NetAddr, VarInt}
 
   def parse(binary) do
-    IO.puts("parsing addr")
-
     with {:ok, %VarInt{value: count}, rest} <- VarInt.parse(binary) do
-      IO.puts("got stuff")
-
       {:ok,
        %Addr{
          count: count,
@@ -19,9 +15,7 @@ defmodule BitcoinNetwork.Protocol.Addr do
            end
        }, <<>>}
     else
-      err ->
-        IO.puts("err #{inspect(err)}")
-        nil
+      _err -> nil
     end
   end
 end

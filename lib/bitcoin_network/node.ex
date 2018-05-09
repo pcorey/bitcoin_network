@@ -39,12 +39,7 @@ defmodule BitcoinNetwork.Node do
 
     messages
     |> Enum.filter(&Message.verify_checksum/1)
-    |> Enum.map(& &1.parsed_payload)
-    |> Enum.map(&handle_payload/1)
-    |> List.flatten()
-    |> Enum.reduce(:ok, fn message, :ok ->
-      send_message(message, state.socket)
-    end)
+    |> Enum.map(&handle_payload(&1.parsed_payload, state))
 
     {:noreply, %{state | rest: rest}}
   end
@@ -53,31 +48,28 @@ defmodule BitcoinNetwork.Node do
     {:noreply, state}
   end
 
-  defp handle_payload(%Version{}) do
-    [
-      Message.serialize("verack"),
+  defp handle_payload(%Version{}, state) do
+    :ok =
+      Message.serialize("verack")
+      |> send_message(state.socket)
+
+    :ok =
       Message.serialize("getaddr")
-    ]
+      |> send_message(state.socket)
   end
 
-  defp handle_payload(%Ping{}) do
-    [
+  defp handle_payload(%Ping{}, state) do
+    :ok =
       Message.serialize("pong")
-    ]
+      |> send_message(state.socket)
   end
 
-  defp handle_payload(%Addr{addr_list: addr_list}) do
-    IO.puts("hi")
-
+  defp handle_payload(%Addr{addr_list: addr_list}, _state) do
     [:bright, "Received ", :green, "#{length(addr_list)}", :reset, :bright, " peers."]
     |> log()
-
-    []
   end
 
-  defp handle_payload(_) do
-    []
-  end
+  defp handle_payload(_payload, _state), do: nil
 
   defp chunk(binary, messages \\ []) do
     case Message.parse(binary) do
@@ -96,10 +88,6 @@ defmodule BitcoinNetwork.Node do
   end
 
   defp send_message(message, socket) do
-    message
-    |> Hexdump.to_string()
-    |> IO.puts()
-
     :gen_tcp.send(socket, message)
   end
 end
