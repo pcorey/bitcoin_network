@@ -4,9 +4,17 @@ defmodule BitcoinNetwork.Application do
   def start(_type, _args) do
     Supervisor.start_link(
       [
-        {BitcoinNetwork.Node,
-         {Application.get_env(:bitcoin_network, :ip),
-          Application.get_env(:bitcoin_network, :port)}}
+        %{
+          id: BitcoinNetwork.Node,
+          start:
+            {BitcoinNetwork.Node, :start_link,
+             [
+               {
+                 Application.get_env(:bitcoin_network, :ip),
+                 Application.get_env(:bitcoin_network, :port)
+               }
+             ]}
+        }
       ],
       strategy: :one_for_one
     )

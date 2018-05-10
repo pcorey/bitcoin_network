@@ -22,7 +22,8 @@ defmodule BitcoinNetwork.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:short_maps, "~> 0.1.2"}
+      {:short_maps, "~> 0.1.2"},
+      {:connection, "~> 1.0"}
     ]
   end
 end

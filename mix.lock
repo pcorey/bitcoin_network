@@ -1,3 +1,4 @@
 %{
+  "connection": {:hex, :connection, "1.0.4", "a1cae72211f0eef17705aaededacac3eb30e6625b04a6117c1b2db6ace7d5976", [:mix], [], "hexpm"},
   "short_maps": {:hex, :short_maps, "0.1.2", "a7c2bfd91179cdbdfe90e74a023992335d116982fa672612c74776b2e9257a7b", [], [], "hexpm"},
 }
