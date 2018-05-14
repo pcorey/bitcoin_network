@@ -1,32 +1,41 @@
-# http://andrealeopardi.com/posts/handling-tcp-connections-in-elixir/
-
 defmodule BitcoinNetwork.Node do
   use Connection
+
+  @max_retries 3
 
   alias BitcoinNetwork.IP
   alias BitcoinNetwork.Protocol.{Addr, Message, Ping, Version}
 
   def start_link({ip, port}) do
-    Connection.start_link(__MODULE__, %{ip: ip, port: port, rest: ""})
+    Connection.start_link(__MODULE__, %{
+      ip: ip,
+      port: port,
+      rest: "",
+      retries: 0
+    })
   end
 
   def init(state) do
     {:connect, nil, state}
   end
 
-  def connect(_, state) do
+  def connect(_info, state = %{retries: @max_retries}) do
+    {:stop, :normal, state}
+  end
+
+  def connect(_info, state) do
     options = [:binary, active: true]
 
     version = %Version{
-      version: 31900,
-      services: 1,
+      version: Application.get_env(:bitcoin_network, :version),
+      services: Application.get_env(:bitcoin_network, :services),
+      user_agent: Application.get_env(:bitcoin_network, :user_agent),
+      from_ip: <<>>,
+      from_port: 0,
       timestamp: :os.system_time(:seconds),
       recv_ip: state.ip,
       recv_port: state.port,
-      from_ip: <<>>,
-      from_port: 0,
       nonce: :binary.decode_unsigned(:crypto.strong_rand_bytes(8)),
-      user_agent: "Elixir rules!",
       start_height: 1
     }
 
@@ -36,20 +45,20 @@ defmodule BitcoinNetwork.Node do
          :ok <- send_message(message, socket) do
       {:ok, Map.put_new(state, :socket, socket)}
     else
-      _ -> {:backoff, 1000, state}
+      _ -> {:backoff, 1000, Map.put(state, :retries, state.retries + 1)}
     end
   end
 
-  def disconnect(_, state) do
+  def disconnect(_reason, state) do
     :ok = :gen_tcp.close(state.socket)
-    {:stop, :disconnect, state}
+    {:stop, :normal, state}
   end
 
   def handle_info({:tcp, _port, data}, state) do
     {messages, rest} = chunk(state.rest <> data)
 
     case handle_messages(messages, state) do
-      {:disconnect, state} -> {:disconnect, %{state | rest: rest}}
+      {:error, reason, state} -> {:disconnect, reason, %{state | rest: rest}}
       state -> {:noreply, %{state | rest: rest}}
     end
   end
@@ -63,7 +72,7 @@ defmodule BitcoinNetwork.Node do
     |> Enum.filter(&Message.verify_checksum/1)
     |> Enum.reduce_while(state, fn message, state ->
       case handle_payload(message.parsed_payload, state) do
-        {:error, reason, state} -> {:halt, {:disconnect, reason, state}}
+        {:error, reason, state} -> {:halt, {:error, reason, state}}
         {:ok, state} -> {:cont, state}
       end
     end)

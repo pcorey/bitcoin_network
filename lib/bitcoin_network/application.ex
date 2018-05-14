@@ -13,7 +13,8 @@ defmodule BitcoinNetwork.Application do
                  Application.get_env(:bitcoin_network, :ip),
                  Application.get_env(:bitcoin_network, :port)
                }
-             ]}
+             ]},
+          restart: :transient
         }
       ],
       strategy: :one_for_one
