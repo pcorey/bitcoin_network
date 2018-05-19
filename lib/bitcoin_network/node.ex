@@ -96,8 +96,9 @@ defmodule BitcoinNetwork.Node do
   end
 
   defp handle_payload(%Addr{addr_list: addr_list}, state) do
-    [:bright, "Received ", :green, "#{length(addr_list)}", :reset, :bright, " peers."]
-    |> log()
+    log([:bright, "Received ", :green, "#{length(addr_list)}", :reset, :bright, " peers."])
+
+    Enum.map(addr_list, &BitcoinNetwork.connect_to_node/1)
 
     {:ok, state}
   end

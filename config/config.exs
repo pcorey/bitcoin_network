@@ -10,6 +10,8 @@ config :bitcoin_network, version: 31900
 config :bitcoin_network, services: 1
 config :bitcoin_network, user_agent: "Elixir rules!"
 
+config :bitcoin_network, max_peers: 125
+
 # This configuration is loaded before any dependency and is restricted
 # to this project. If another project depends on this project, this
 # file won't be loaded nor affect the parent project. For this reason,
