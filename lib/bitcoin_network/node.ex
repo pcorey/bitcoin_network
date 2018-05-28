@@ -4,7 +4,7 @@ defmodule BitcoinNetwork.Node do
   @max_retries 3
 
   alias BitcoinNetwork.IP
-  alias BitcoinNetwork.Protocol.{Addr, Message, Ping, Version}
+  alias BitcoinNetwork.Protocol.{Addr, Message, Ping, Pong, Version}
 
   def start_link({ip, port}) do
     Connection.start_link(__MODULE__, %{
@@ -95,8 +95,20 @@ defmodule BitcoinNetwork.Node do
     end
   end
 
+  defp handle_payload(%Pong{nonce: nonce}, state = %{timer: timer}) do
+    log("got pong #{nonce}")
+
+    with :ok <- Message.serialize("ping", %Ping{nonce: 1337}) |> send_message(state.socket),
+         :ok <- Process.cancel_timer(timer),
+         timer <- Process.send_after(self(), :timeout, 30_000) do
+      {:ok, %{state | timer: timer}}
+    else
+      {:error, reason} -> {:error, reason, state}
+    end
+  end
+
   defp handle_payload(%Addr{addr_list: addr_list}, state) do
-    log([:bright, "Received ", :green, "#{length(addr_list)}", :reset, :bright, " peers."])
+    log([:reset, "Received ", :bright, :green, "#{length(addr_list)}", :reset, " peers."])
 
     Enum.map(addr_list, &BitcoinNetwork.connect_to_node/1)
 
@@ -116,7 +128,7 @@ defmodule BitcoinNetwork.Node do
   end
 
   defp log(message) do
-    [:bright, :black, "[#{inspect(self())}] ", :reset, message]
+    [:light_black, "[#{inspect(self())}] ", :reset, message]
     |> IO.ANSI.format()
     |> IO.puts()
   end

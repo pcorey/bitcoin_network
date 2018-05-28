@@ -2,14 +2,14 @@ defmodule BitcoinNetwork.Protocol.Message do
   defstruct magic: nil, command: nil, size: nil, checksum: nil, payload: nil, parsed_payload: nil
 
   alias BitcoinNetwork.Protocol
-  alias BitcoinNetwork.Protocol.{Addr, Message, Ping, Verack, Version}
+  alias BitcoinNetwork.Protocol.{Addr, Message, Ping, Pong, Verack, Version}
 
   def parse(binary) do
     with <<
-           magic::32-little,
+           magic::binary-size(4),
            command::binary-size(12),
            size::32-little,
-           checksum::32-big,
+           checksum::binary-size(4),
            payload::binary-size(size),
            rest::binary
          >> <- binary,
@@ -34,6 +34,7 @@ defmodule BitcoinNetwork.Protocol.Message do
 
   def parse_payload("addr" <> _, payload), do: Addr.parse(payload)
   def parse_payload("ping" <> _, payload), do: Ping.parse(payload)
+  def parse_payload("pong" <> _, payload), do: Pong.parse(payload)
   def parse_payload("verack" <> _, payload), do: Verack.parse(payload)
   def parse_payload("version" <> _, payload), do: Version.parse(payload)
 
@@ -64,7 +65,7 @@ defmodule BitcoinNetwork.Protocol.Message do
   def verify_checksum(_), do: false
 
   def checksum(payload) do
-    <<checksum::32, _::binary>> =
+    <<checksum::binary-size(4), _::binary>> =
       payload
       |> hash(:sha256)
       |> hash(:sha256)
@@ -83,7 +84,7 @@ defimpl BitcoinNetwork.Protocol, for: BitcoinNetwork.Protocol.Message do
       Application.get_env(:bitcoin_network, :magic)::binary,
       String.pad_trailing(command, 12, <<0>>)::binary,
       byte_size(payload)::32-little,
-      :binary.encode_unsigned(Message.checksum(payload))::binary,
+      Message.checksum(payload)::binary,
       payload::binary
     >>
   end
