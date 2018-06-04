@@ -21,10 +21,15 @@ defmodule BitcoinNetwork.Protocol.Addr do
 end
 
 defimpl BitcoinNetwork.Protocol, for: BitcoinNetwork.Protocol.Addr do
-  alias BitcoinNetwork.Protocol.Addr
+  alias BitcoinNetwork.Protocol
+  alias BitcoinNetwork.Protocol.{Addr, VarInt}
 
-  # TODO: Do this...
-  def serialize(%Addr{addr_list: _addr_list}) do
-    <<>>
+  def serialize(%Addr{count: count, addr_list: addr_list}) do
+    <<
+      Protocol.serialize(%VarInt{value: count})::binary,
+      addr_list
+      |> Enum.map(&Protocol.serialize/1)
+      |> Enum.join()::binary
+    >>
   end
 end

@@ -3,6 +3,11 @@ defmodule BitcoinNetwork.Protocol.MessageTest do
 
   alias BitcoinNetwork.Protocol.{Message, Pong}
 
+  @moduledoc """
+  Tests in this module are designed to verify that the "message" envelope
+  correctly parse and serialize.
+  """
+
   test "parses a full pong packet" do
     pong = %Message{
       checksum: <<0x0D, 0x96, 0x88, 0xAC>>,

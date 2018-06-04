@@ -32,9 +32,11 @@ defmodule BitcoinNetwork.Node do
       user_agent: Application.get_env(:bitcoin_network, :user_agent),
       from_ip: <<>>,
       from_port: 0,
+      from_services: Application.get_env(:bitcoin_network, :services),
       timestamp: :os.system_time(:seconds),
       recv_ip: state.ip,
       recv_port: state.port,
+      recv_services: Application.get_env(:bitcoin_network, :services),
       nonce: :binary.decode_unsigned(:crypto.strong_rand_bytes(8)),
       start_height: 1
     }

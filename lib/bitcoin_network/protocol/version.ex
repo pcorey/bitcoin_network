@@ -4,8 +4,10 @@ defmodule BitcoinNetwork.Protocol.Version do
             timestamp: nil,
             recv_ip: nil,
             recv_port: nil,
+            recv_services: nil,
             from_ip: nil,
             from_port: nil,
+            from_services: nil,
             nonce: nil,
             user_agent: nil,
             start_height: nil
@@ -15,8 +17,10 @@ defmodule BitcoinNetwork.Protocol.Version do
 
   def parse(binary) do
     with <<version::32-little, services::64-little, timestamp::64-little, rest::binary>> <- binary,
-         {:ok, %VersionNetAddr{ip: recv_ip, port: recv_port}, rest} <- VersionNetAddr.parse(rest),
-         {:ok, %VersionNetAddr{ip: from_ip, port: from_port}, rest} <- VersionNetAddr.parse(rest),
+         {:ok, %VersionNetAddr{ip: recv_ip, port: recv_port, services: recv_services}, rest} <-
+           VersionNetAddr.parse(rest),
+         {:ok, %VersionNetAddr{ip: from_ip, port: from_port, services: from_services}, rest} <-
+           VersionNetAddr.parse(rest),
          <<nonce::64-little, rest::binary>> <- rest,
          {:ok, %VarStr{value: user_agent}, rest} <- VarStr.parse(rest),
          <<start_height::32-little, rest::binary>> <- rest do
@@ -27,8 +31,10 @@ defmodule BitcoinNetwork.Protocol.Version do
          timestamp
          recv_ip
          recv_port
+         recv_services
          from_ip
          from_port
+         from_services
          nonce
          user_agent
          start_height
@@ -47,12 +53,12 @@ defimpl BitcoinNetwork.Protocol, for: BitcoinNetwork.Protocol.Version do
       version.services::64-little,
       version.timestamp::64-little,
       Protocol.serialize(%VersionNetAddr{
-        services: version.services,
+        services: version.recv_services,
         ip: version.recv_ip,
         port: version.recv_port
       })::binary,
       Protocol.serialize(%VersionNetAddr{
-        services: version.services,
+        services: version.from_services,
         ip: version.from_ip,
         port: version.from_port
       })::binary,

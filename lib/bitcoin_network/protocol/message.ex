@@ -2,7 +2,7 @@ defmodule BitcoinNetwork.Protocol.Message do
   defstruct magic: nil, command: nil, size: nil, checksum: nil, payload: nil, parsed_payload: nil
 
   alias BitcoinNetwork.Protocol
-  alias BitcoinNetwork.Protocol.{Addr, Message, Ping, Pong, Verack, Version}
+  alias BitcoinNetwork.Protocol.{Addr, GetAddr, Message, Ping, Pong, Verack, Version}
 
   def parse(binary) do
     with <<
@@ -33,6 +33,7 @@ defmodule BitcoinNetwork.Protocol.Message do
   end
 
   def parse_payload("addr" <> _, payload), do: Addr.parse(payload)
+  def parse_payload("getaddr" <> _, payload), do: GetAddr.parse(payload)
   def parse_payload("ping" <> _, payload), do: Ping.parse(payload)
   def parse_payload("pong" <> _, payload), do: Pong.parse(payload)
   def parse_payload("verack" <> _, payload), do: Verack.parse(payload)

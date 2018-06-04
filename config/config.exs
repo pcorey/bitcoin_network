@@ -6,7 +6,7 @@ config :bitcoin_network, magic: <<0x0B, 0x11, 0x09, 0x07>>
 config :bitcoin_network, ip: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF, 0xFF, 127, 0, 0, 1>>
 config :bitcoin_network, port: 18333
 
-config :bitcoin_network, version: 31900
+config :bitcoin_network, version: 70015
 config :bitcoin_network, services: 1
 config :bitcoin_network, user_agent: "Elixir rules!"
 

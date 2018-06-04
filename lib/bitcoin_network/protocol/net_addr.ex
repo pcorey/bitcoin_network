@@ -14,6 +14,6 @@ defimpl BitcoinNetwork.Protocol, for: BitcoinNetwork.Protocol.NetAddr do
   alias BitcoinNetwork.Protocol.NetAddr
 
   def serialize(%NetAddr{time: time, services: services, ip: ip, port: port}) do
-    <<services::64-little, :binary.decode_unsigned(ip)::128-big, port::16-big>>
+    <<time::32-little, services::64-little, :binary.decode_unsigned(ip)::128-big, port::16-big>>
   end
 end
