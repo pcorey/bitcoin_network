@@ -4,7 +4,7 @@ defmodule BitcoinNetwork.Node do
   @max_retries 3
 
   alias BitcoinNetwork.IP
-  alias BitcoinNetwork.Protocol.{Addr, Message, Ping, Pong, Version}
+  alias BitcoinNetwork.Protocol.{Addr, Message, Ping, Pong, Verack, Version}
 
   def start_link({ip, port}) do
     Connection.start_link(__MODULE__, %{
@@ -69,6 +69,11 @@ defmodule BitcoinNetwork.Node do
     {:noreply, state}
   end
 
+  def handle_info(:timeout, state) do
+    IO.puts("timed out!")
+    {:noreply, state}
+  end
+
   defp handle_messages(messages, state) do
     messages
     |> Enum.filter(&Message.verify_checksum/1)
@@ -97,13 +102,11 @@ defmodule BitcoinNetwork.Node do
     end
   end
 
-  defp handle_payload(%Pong{nonce: nonce}, state = %{timer: timer}) do
+  defp handle_payload(%Pong{nonce: nonce}, state) do
     log("got pong #{nonce}")
 
-    with :ok <- Message.serialize("ping", %Ping{nonce: 1337}) |> send_message(state.socket),
-         :ok <- Process.cancel_timer(timer),
-         timer <- Process.send_after(self(), :timeout, 30_000) do
-      {:ok, %{state | timer: timer}}
+    with :ok <- Message.serialize("ping", %Ping{nonce: 1337}) |> send_message(state.socket) do
+      {:ok, state}
     else
       {:error, reason} -> {:error, reason, state}
     end
@@ -127,6 +130,12 @@ defmodule BitcoinNetwork.Node do
       nil ->
         {messages, binary}
     end
+  end
+
+  defp refresh_timeout(state) do
+    state
+    |> cancel_timeout
+    |> set_timeout
   end
 
   defp log(message) do

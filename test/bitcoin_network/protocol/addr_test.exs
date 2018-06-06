@@ -32,15 +32,13 @@ defmodule BitcoinNetwork.Protocol.AddrTest do
     }
 
     assert {:ok, packet} = File.read("test/fixtures/addr.bin")
-    assert {:ok, message, ""} = Message.parse(packet)
-    assert {:ok, parsed, ""} = Addr.parse(message.payload)
-    assert parsed == addr
+    assert {:ok, message, <<>>} = Message.parse(packet)
+    assert message.parsed_payload == addr
   end
 
   test "serializes a addr struct" do
     assert {:ok, packet} = File.read("test/fixtures/addr.bin")
-    assert {:ok, message, ""} = Message.parse(packet)
-    assert {:ok, _addr, <<>>} = Addr.parse(message.payload)
+    assert {:ok, message, <<>>} = Message.parse(packet)
     assert Protocol.serialize(message.parsed_payload) == message.payload
   end
 end

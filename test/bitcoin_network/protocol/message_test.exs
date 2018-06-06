@@ -21,7 +21,7 @@ defmodule BitcoinNetwork.Protocol.MessageTest do
     }
 
     {:ok, packet} = File.read("test/fixtures/pong.bin")
-    {:ok, message, ""} = Message.parse(packet)
+    {:ok, message, <<>>} = Message.parse(packet)
 
     assert message == pong
   end
@@ -37,7 +37,7 @@ defmodule BitcoinNetwork.Protocol.MessageTest do
 
   test "verifies a checksum" do
     {:ok, packet} = File.read("test/fixtures/pong.bin")
-    {:ok, message, ""} = Message.parse(packet)
+    {:ok, message, <<>>} = Message.parse(packet)
     assert Message.verify_checksum(message)
   end
 end
