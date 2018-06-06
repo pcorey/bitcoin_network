@@ -4,7 +4,7 @@ defmodule BitcoinNetwork.Node do
   @max_retries 3
 
   alias BitcoinNetwork.IP
-  alias BitcoinNetwork.Protocol.{Addr, Message, Ping, Pong, Verack, Version}
+  alias BitcoinNetwork.Protocol.{Addr, Message, Ping, Pong, Version}
 
   def start_link({ip, port}) do
     Connection.start_link(__MODULE__, %{
@@ -69,11 +69,6 @@ defmodule BitcoinNetwork.Node do
     {:noreply, state}
   end
 
-  def handle_info(:timeout, state) do
-    IO.puts("timed out!")
-    {:noreply, state}
-  end
-
   defp handle_messages(messages, state) do
     messages
     |> Enum.filter(&Message.verify_checksum/1)
@@ -130,12 +125,6 @@ defmodule BitcoinNetwork.Node do
       nil ->
         {messages, binary}
     end
-  end
-
-  defp refresh_timeout(state) do
-    state
-    |> cancel_timeout
-    |> set_timeout
   end
 
   defp log(message) do
