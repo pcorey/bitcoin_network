@@ -5,7 +5,10 @@ defmodule BitcoinNetwork.Application do
     {:ok, pid} =
       Supervisor.start_link(
         [
-          {DynamicSupervisor, strategy: :one_for_one, name: BitcoinNetwork.Node.Supervisor}
+          {DynamicSupervisor,
+           name: BitcoinNetwork.Node.Supervisor,
+           strategy: :one_for_one,
+           max_children: Application.get_env(:bitcoin_network, :max_peers)}
         ],
         strategy: :one_for_one
       )
