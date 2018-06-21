@@ -66,7 +66,7 @@ defmodule BitcoinNetwork.Node do
   end
 
   def handle_info({:tcp_closed, _port}, state) do
-    {:noreply, state}
+    {:disconnect, :tcp_closed, state}
   end
 
   defp handle_messages(messages, state) do
