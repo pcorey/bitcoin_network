@@ -15,7 +15,7 @@ defmodule BitcoinNetwork.Protocol.MessageTest do
       magic: <<0x0B, 0x11, 0x09, 0x07>>,
       size: 8,
       parsed_payload: %Pong{
-        nonce: 4_911_176_849_251_046_305
+        nonce: <<161, 19, 187, 232, 82, 1, 40, 68>>
       },
       payload: <<0xA1, 0x13, 0xBB, 0xE8, 0x52, 0x1, 0x28, 0x44>>
     }
@@ -29,7 +29,7 @@ defmodule BitcoinNetwork.Protocol.MessageTest do
   test "serializes a pong struct into a packet" do
     pong =
       "pong"
-      |> Message.serialize(%Pong{nonce: 4_911_176_849_251_046_305})
+      |> Message.serialize(%Pong{nonce: <<161, 19, 187, 232, 82, 1, 40, 68>>})
 
     {:ok, packet} = File.read("test/fixtures/pong.bin")
     assert packet == pong

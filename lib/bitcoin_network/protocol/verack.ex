@@ -9,7 +9,7 @@ defmodule BitcoinNetwork.Protocol.Verack do
 end
 
 defimpl BitcoinNetwork.Protocol, for: BitcoinNetwork.Protocol.Verack do
-  def serialize(verack) do
+  def serialize(_verack) do
     <<>>
   end
 end

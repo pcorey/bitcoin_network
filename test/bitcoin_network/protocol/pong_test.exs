@@ -18,7 +18,7 @@ defmodule BitcoinNetwork.Protocol.PongTest do
 
   test "parses a pong payload" do
     pong = %Pong{
-      nonce: 4_911_176_849_251_046_305
+      nonce: <<161, 19, 187, 232, 82, 1, 40, 68>>
     }
 
     assert {:ok, packet} = File.read("test/fixtures/pong.bin")

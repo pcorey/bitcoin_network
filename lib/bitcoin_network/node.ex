@@ -43,7 +43,13 @@ defmodule BitcoinNetwork.Node do
 
     message = Message.serialize("version", version)
 
-    with {:ok, socket} <- :gen_tcp.connect(IP.to_tuple(state.ip), state.port, options),
+    with {:ok, socket} <-
+           :gen_tcp.connect(
+             IP.to_tuple(state.ip),
+             state.port,
+             options,
+             Application.get_env(:bitcoin_network, :timeout)
+           ),
          :ok <- send_message(message, socket) do
       {:ok, Map.put_new(state, :socket, socket)}
     else
@@ -57,6 +63,7 @@ defmodule BitcoinNetwork.Node do
   end
 
   def handle_info({:tcp, _port, data}, state) do
+    state = refresh_timeout(state)
     {messages, rest} = chunk(state.rest <> data)
 
     case handle_messages(messages, state) do
@@ -67,6 +74,22 @@ defmodule BitcoinNetwork.Node do
 
   def handle_info({:tcp_closed, _port}, state) do
     {:disconnect, :tcp_closed, state}
+  end
+
+  def handle_info(:timeout, state) do
+    {:disconnect, :timeout, state}
+  end
+
+  def handle_info(:send_ping, state) do
+    with :ok <-
+           Message.serialize("ping", %Ping{
+             nonce: :crypto.strong_rand_bytes(8)
+           })
+           |> send_message(state.socket) do
+      {:noreply, state}
+    else
+      {:error, reason} -> {:error, reason, state}
+    end
   end
 
   defp handle_messages(messages, state) do
@@ -82,35 +105,37 @@ defmodule BitcoinNetwork.Node do
 
   defp handle_payload(%Version{}, state) do
     with :ok <- Message.serialize("verack") |> send_message(state.socket),
-         :ok <- Message.serialize("getaddr") |> send_message(state.socket) do
+         :ok <- Message.serialize("getaddr") |> send_message(state.socket),
+         :ok <-
+           Message.serialize("ping", %Ping{
+             nonce: :crypto.strong_rand_bytes(8)
+           })
+           |> send_message(state.socket) do
       {:ok, state}
     else
       {:error, reason} -> {:error, reason, state}
     end
   end
 
-  defp handle_payload(%Ping{}, state) do
-    with :ok <- Message.serialize("pong") |> send_message(state.socket) do
+  defp handle_payload(%Ping{nonce: nonce}, state) do
+    with :ok <- Message.serialize("pong", %Pong{nonce: nonce}) |> send_message(state.socket) do
       {:ok, state}
     else
       {:error, reason} -> {:error, reason, state}
     end
   end
 
-  defp handle_payload(%Pong{nonce: nonce}, state) do
-    log("got pong #{nonce}")
-
-    with :ok <- Message.serialize("ping", %Ping{nonce: 1337}) |> send_message(state.socket) do
-      {:ok, state}
-    else
-      {:error, reason} -> {:error, reason, state}
-    end
+  defp handle_payload(%Pong{}, state) do
+    Process.send_after(self(), :send_ping, Application.get_env(:bitcoin_network, :ping_time))
+    {:ok, state}
   end
 
   defp handle_payload(%Addr{addr_list: addr_list}, state) do
     log([:reset, "Received ", :bright, :green, "#{length(addr_list)}", :reset, " peers."])
 
-    Enum.map(addr_list, &BitcoinNetwork.connect_to_node/1)
+    addr_list
+    |> Enum.sort_by(& &1.time, &>=/2)
+    |> Enum.map(&BitcoinNetwork.connect_to_node/1)
 
     {:ok, state}
   end
@@ -125,6 +150,17 @@ defmodule BitcoinNetwork.Node do
       nil ->
         {messages, binary}
     end
+  end
+
+  defp refresh_timeout(state = %{timer: timer}) do
+    Process.cancel_timer(timer)
+    timer = Process.send_after(self(), :timeout, Application.get_env(:bitcoin_network, :timeout))
+    Map.put(state, :timer, timer)
+  end
+
+  defp refresh_timeout(state) do
+    timer = Process.send_after(self(), :timeout, Application.get_env(:bitcoin_network, :timeout))
+    Map.put_new(state, :timer, timer)
   end
 
   defp log(message) do

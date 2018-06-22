@@ -11,6 +11,8 @@ config :bitcoin_network, services: 1
 config :bitcoin_network, user_agent: "Elixir rules!"
 
 config :bitcoin_network, max_peers: 125
+config :bitcoin_network, ping_time: 15_000
+config :bitcoin_network, timeout: 30_000
 
 # This configuration is loaded before any dependency and is restricted
 # to this project. If another project depends on this project, this

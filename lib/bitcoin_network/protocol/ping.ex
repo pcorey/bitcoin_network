@@ -3,7 +3,7 @@ defmodule BitcoinNetwork.Protocol.Ping do
 
   alias BitcoinNetwork.Protocol.Ping
 
-  def parse(<<nonce::64-little, rest::binary>>) do
+  def parse(<<nonce::binary-size(8), rest::binary>>) do
     {:ok, %Ping{nonce: nonce}, rest}
   end
 
@@ -14,6 +14,6 @@ end
 
 defimpl BitcoinNetwork.Protocol, for: BitcoinNetwork.Protocol.Ping do
   def serialize(ping) do
-    <<ping.nonce::64-little>>
+    <<ping.nonce::binary-size(8)>>
   end
 end

@@ -9,7 +9,7 @@ defmodule BitcoinNetwork.Protocol.GetAddr do
 end
 
 defimpl BitcoinNetwork.Protocol, for: BitcoinNetwork.Protocol.GetAddr do
-  def serialize(verack) do
+  def serialize(_getaddr) do
     <<>>
   end
 end

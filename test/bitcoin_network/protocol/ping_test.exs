@@ -18,7 +18,7 @@ defmodule BitcoinNetwork.Protocol.PingTest do
 
   test "parses a ping payload" do
     ping = %Ping{
-      nonce: 16_870_689_958_184_086_468
+      nonce: <<196, 235, 79, 217, 33, 187, 32, 234>>
     }
 
     assert {:ok, packet} = File.read("test/fixtures/ping.bin")
