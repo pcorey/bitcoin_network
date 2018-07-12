@@ -3,17 +3,26 @@ defmodule BitcoinNetwork.Protocol.Ping do
 
   alias BitcoinNetwork.Protocol.Ping
 
-  def parse(<<nonce::binary-size(8), rest::binary>>) do
-    {:ok, %Ping{nonce: nonce}, rest}
+  def parse(binary) do
+    with {:ok, nonce, rest} <- parse_nonce(binary) do
+      {:ok, %Ping{nonce: nonce}, rest}
+    end
   end
 
-  def parse(<<>>) do
-    {:ok, %Ping{}, <<>>}
-  end
+  defp parse_nonce(<<nonce::binary-size(8), rest::binary>>),
+    do: {:ok, nonce, rest}
+
+  defp parse_nonce(_binary),
+    do: {:error, :bad_nonce}
 end
 
 defimpl BitcoinNetwork.Protocol, for: BitcoinNetwork.Protocol.Ping do
   def serialize(ping) do
-    <<ping.nonce::binary-size(8)>>
+    <<
+      serialize_nonce(ping)::binary
+    >>
   end
+
+  defp serialize_nonce(%{nonce: nonce}),
+    do: <<nonce::binary-size(8)>>
 end
