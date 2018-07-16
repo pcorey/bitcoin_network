@@ -12,7 +12,8 @@ defmodule BitcoinNetwork.Protocol.Version do
             from_services: nil,
             nonce: nil,
             user_agent: nil,
-            start_height: nil
+            start_height: nil,
+            relay: 1
 
   def parse(binary) do
     with {:ok, version, rest} <- parse_version(binary),
@@ -22,7 +23,8 @@ defmodule BitcoinNetwork.Protocol.Version do
          {:ok, from_ip, from_port, from_services, rest} <- parse_net_addr(rest),
          {:ok, nonce, rest} <- parse_nonce(rest),
          {:ok, user_agent, rest} <- parse_user_agent(rest),
-         {:ok, start_height, rest} <- parse_start_height(rest) do
+         {:ok, start_height, rest} <- parse_start_height(rest),
+         {:ok, relay, rest} <- parse_relay(rest) do
       {:ok,
        %Version{
          version: version,
@@ -36,7 +38,8 @@ defmodule BitcoinNetwork.Protocol.Version do
          from_services: from_services,
          nonce: nonce,
          user_agent: user_agent,
-         start_height: start_height
+         start_height: start_height,
+         relay: relay
        }, rest}
     end
   end
@@ -83,6 +86,12 @@ defmodule BitcoinNetwork.Protocol.Version do
 
   defp parse_start_height(_binary),
     do: {:error, :bad_start_height}
+
+  defp parse_relay(<<relay::8-little, rest::binary>>),
+    do: {:ok, relay, rest}
+
+  defp parse_relay(_binary),
+    do: {:error, :bad_relay}
 end
 
 defimpl BitcoinNetwork.Protocol, for: BitcoinNetwork.Protocol.Version do
@@ -98,7 +107,8 @@ defimpl BitcoinNetwork.Protocol, for: BitcoinNetwork.Protocol.Version do
       serialize_from_net_addr(version)::binary,
       serialize_nonce(version)::binary,
       serialize_user_agent(version)::binary,
-      serialize_start_height(version)::binary
+      serialize_start_height(version)::binary,
+      serialize_relay(version)::binary
     >>
   end
 
@@ -141,4 +151,7 @@ defimpl BitcoinNetwork.Protocol, for: BitcoinNetwork.Protocol.Version do
 
   defp serialize_start_height(%{start_height: start_height}),
     do: <<start_height::32-little>>
+
+  defp serialize_relay(%{relay: relay}),
+    do: <<relay::8-little>>
 end

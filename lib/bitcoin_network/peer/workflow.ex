@@ -1,4 +1,4 @@
-defmodule BitcoinNetwork.Peer.Payload do
+defmodule BitcoinNetwork.Peer.Workflow do
   alias BitcoinNetwork.Peer
 
   alias BitcoinNetwork.Protocol.{

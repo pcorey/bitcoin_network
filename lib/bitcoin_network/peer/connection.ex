@@ -4,7 +4,7 @@ defmodule BitcoinNetwork.Peer.Connection do
   alias BitcoinNetwork.IP
   alias BitcoinNetwork.Peer
   alias BitcoinNetwork.Peer.Packet
-  alias BitcoinNetwork.Protocol.{Message, Ping, Version}
+  alias BitcoinNetwork.Protocol.{Ping, Version}
 
   use Connection
 
@@ -70,9 +70,14 @@ defmodule BitcoinNetwork.Peer.Connection do
     state = refresh_timeout(state)
     {messages, rest} = Packet.chunk(state.rest <> data)
 
+    IO.inspect(messages)
+
     case Packet.handle_packets(messages, state) do
-      {:error, reason, state} -> {:disconnect, reason, %{state | rest: rest}}
-      state -> {:noreply, %{state | rest: rest}}
+      {:ok, state} ->
+        {:noreply, %{state | rest: rest}}
+
+      {:error, reason, state} ->
+        {:disconnect, reason, %{state | rest: rest}}
     end
   end
 

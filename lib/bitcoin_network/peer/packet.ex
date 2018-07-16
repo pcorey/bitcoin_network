@@ -1,14 +1,17 @@
 defmodule BitcoinNetwork.Peer.Packet do
-  alias BitcoinNetwork.Peer.Payload
+  alias BitcoinNetwork.Peer.Workflow
   alias BitcoinNetwork.Protocol.Message
 
   def handle_packets(messages, state) do
     messages
     |> Enum.filter(&Message.Checksum.verify_checksum/1)
-    |> Enum.reduce_while(state, fn message, state ->
-      case Payload.handle_payload(message.payload, state) do
-        {:error, reason, state} -> {:halt, {:error, reason, state}}
-        {:ok, state} -> {:cont, state}
+    |> Enum.reduce_while({:ok, state}, fn message, {:ok, state} ->
+      case Workflow.handle_payload(message.payload, state) do
+        {:error, reason, {:ok, state}} ->
+          {:halt, {:error, reason, state}}
+
+        {:ok, state} ->
+          {:cont, {:ok, state}}
       end
     end)
   end
@@ -19,6 +22,7 @@ defmodule BitcoinNetwork.Peer.Packet do
         chunk(rest, messages ++ [message])
 
       {:error, _reason} ->
+        IO.puts("reason #{inspect(_reason)}")
         {messages, binary}
     end
   end

@@ -56,6 +56,8 @@ defmodule BitcoinNetwork.Protocol.Message do
     do: {:error, :bad_checksum}
 
   defp parse_payload(binary, command, size) do
+    IO.puts("#{inspect(command)} #{inspect(parse_payload_module(command))}")
+
     with <<payload::binary-size(size), _rest::binary>> <- binary,
          {:ok, module} <- parse_payload_module(command) do
       apply(module, :parse, [payload])
