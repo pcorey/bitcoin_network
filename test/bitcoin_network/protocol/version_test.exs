@@ -35,17 +35,18 @@ defmodule BitcoinNetwork.Protocol.VersionTest do
       from_services: 13,
       nonce: 15_116_783_876_185_394_608,
       user_agent: "/Satoshi:0.14.2/",
-      start_height: 1_322_730
+      start_height: 1_322_730,
+      relay: 1
     }
 
     assert {:ok, packet} = File.read("test/fixtures/version.bin")
     assert {:ok, message, <<>>} = Message.parse(packet)
-    assert message.parsed_payload == version
+    assert message.payload == version
   end
 
   test "serializes a version struct" do
     assert {:ok, packet} = File.read("test/fixtures/version.bin")
     assert {:ok, message, <<>>} = Message.parse(packet)
-    assert Protocol.serialize(message.parsed_payload) <> <<1>> == message.payload
+    assert packet =~ Protocol.serialize(message.payload)
   end
 end

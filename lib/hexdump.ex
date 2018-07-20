@@ -13,7 +13,8 @@ defmodule Hexdump do
     |> Enum.join("\n")
   end
 
-  def to_string(data), do: Kernel.inspect(data)
+  def to_string(data),
+    do: Kernel.inspect(data)
 
   def line_to_string({parts, index}) do
     count =

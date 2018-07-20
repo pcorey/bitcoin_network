@@ -3,16 +3,38 @@
 use Mix.Config
 
 config :bitcoin_network, magic: <<0x0B, 0x11, 0x09, 0x07>>
-config :bitcoin_network, ip: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF, 0xFF, 127, 0, 0, 1>>
+
+config :bitcoin_network,
+  ip: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF, 0xFF, 127, 0, 0, 1>>
+
 config :bitcoin_network, port: 18333
 
 config :bitcoin_network, version: 70015
 config :bitcoin_network, services: 1
 config :bitcoin_network, user_agent: "Elixir rules!"
 
+config :bitcoin_network, max_retries: 3
 config :bitcoin_network, max_peers: 125
-config :bitcoin_network, ping_time: 15_000
+config :bitcoin_network, ping_time: 5_000
 config :bitcoin_network, timeout: 30_000
+
+config :logger,
+  backends: [:console],
+  compile_time_purge_level: :info
+
+config :logger, :console,
+  colors: [enabled: true],
+  format:
+    [
+      :reset,
+      :light_black,
+      "[ $metadata]",
+      :reset,
+      " $message\n"
+    ]
+    |> IO.ANSI.format()
+    |> IO.chardata_to_string(),
+  metadata: [:pid]
 
 # This configuration is loaded before any dependency and is restricted
 # to this project. If another project depends on this project, this

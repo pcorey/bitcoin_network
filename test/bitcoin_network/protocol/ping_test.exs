@@ -23,12 +23,12 @@ defmodule BitcoinNetwork.Protocol.PingTest do
 
     assert {:ok, packet} = File.read("test/fixtures/ping.bin")
     assert {:ok, message, <<>>} = Message.parse(packet)
-    assert message.parsed_payload == ping
+    assert message.payload == ping
   end
 
   test "serializes a ping struct" do
     assert {:ok, packet} = File.read("test/fixtures/ping.bin")
     assert {:ok, message, <<>>} = Message.parse(packet)
-    assert Protocol.serialize(message.parsed_payload) == message.payload
+    assert packet =~ Protocol.serialize(message.payload)
   end
 end
