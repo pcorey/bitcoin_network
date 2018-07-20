@@ -13,10 +13,10 @@ defmodule BitcoinNetwork.Peer.Workflow do
   require Logger
 
   def handle_payload(%Version{}, state) do
-    with :ok <- Peer.send(%Verack{}, state.socket),
-         :ok <- Peer.send(%GetAddr{}, state.socket),
-         :ok <-
-           Peer.send(%Ping{nonce: :crypto.strong_rand_bytes(8)}, state.socket) do
+    with nonce <- :crypto.strong_rand_bytes(8),
+         {:ok, _} <- Peer.send(%Verack{}, state.socket),
+         {:ok, _} <- Peer.send(%GetAddr{}, state.socket),
+         {:ok, _} <- Peer.send(%Ping{nonce: nonce}, state.socket) do
       {:ok, state}
     else
       {:error, reason} -> {:error, reason, state}
@@ -24,7 +24,7 @@ defmodule BitcoinNetwork.Peer.Workflow do
   end
 
   def handle_payload(%Ping{nonce: nonce}, state) do
-    with :ok <- Peer.send(%Pong{nonce: nonce}, state.socket) do
+    with {:ok, _} <- Peer.send(%Pong{nonce: nonce}, state.socket) do
       {:ok, state}
     else
       {:error, reason} -> {:error, reason, state}
@@ -34,7 +34,7 @@ defmodule BitcoinNetwork.Peer.Workflow do
   def handle_payload(%Pong{}, state) do
     Process.send_after(
       self(),
-      :send_ping,
+      :ping,
       Application.get_env(:bitcoin_network, :ping_time)
     )
 

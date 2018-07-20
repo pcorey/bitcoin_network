@@ -24,14 +24,14 @@ defmodule BitcoinNetwork.Protocol.Addr do
 
   defp parse_addr_list(binary, addr_list) do
     with {:ok, net_addr, rest} <- NetAddr.parse(binary) do
-      parse_addr_list(rest, [net_addr | addr_list])
+      parse_addr_list(rest, addr_list ++ [net_addr])
     end
   end
 end
 
 defimpl BitcoinNetwork.Protocol, for: BitcoinNetwork.Protocol.Addr do
   alias BitcoinNetwork.Protocol
-  alias BitcoinNetwork.Protocol.{Addr, VarInt}
+  alias BitcoinNetwork.Protocol.VarInt
 
   def serialize(addr) do
     <<

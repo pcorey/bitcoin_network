@@ -60,7 +60,7 @@ defmodule BitcoinNetwork.Protocol.Version do
     do: {:ok, timestamp, rest}
 
   defp parse_timestamp(_binary),
-    do: {:error, :bad_binary}
+    do: {:error, :bad_timestamp}
 
   defp parse_net_addr(binary) do
     with {:ok, %VersionNetAddr{ip: ip, port: port, services: services}, rest} <-

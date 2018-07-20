@@ -2,11 +2,14 @@ defmodule BitcoinNetwork.Protocol.Message.Checksum do
   alias BitcoinNetwork.Protocol
   alias BitcoinNetwork.Protocol.Message
 
-  def verify_checksum(%Message{size: size, checksum: checksum, payload: payload}) do
+  def verify_checksum(%Message{size: size, checksum: checksum}, payload) do
     serialized_payload = Protocol.serialize(payload)
 
-    checksum(serialized_payload) == checksum &&
-      byte_size(serialized_payload) == size
+    case checksum(serialized_payload) == checksum &&
+           byte_size(serialized_payload) == size do
+      true -> {:ok, checksum}
+      false -> {:error, :bad_checksum}
+    end
   end
 
   def verify_checksum(_),

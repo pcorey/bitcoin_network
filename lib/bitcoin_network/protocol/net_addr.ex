@@ -38,8 +38,6 @@ defmodule BitcoinNetwork.Protocol.NetAddr do
 end
 
 defimpl BitcoinNetwork.Protocol, for: BitcoinNetwork.Protocol.NetAddr do
-  alias BitcoinNetwork.Protocol.NetAddr
-
   def serialize(net_addr) do
     <<
       serialize_time(net_addr)::binary,

@@ -6,8 +6,9 @@ defmodule BitcoinNetwork.Protocol.Verack do
   def parse(<<>>),
     do: {:ok, %Verack{}, <<>>}
 
-  def parse(_binary),
-    do: {:error, :bad_verack}
+  def parse(_binary) do
+    {:error, :bad_verack}
+  end
 end
 
 defimpl BitcoinNetwork.Protocol, for: BitcoinNetwork.Protocol.Verack do
