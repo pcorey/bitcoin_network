@@ -15,7 +15,7 @@ config :bitcoin_network, user_agent: "Elixir rules!"
 
 config :bitcoin_network, max_retries: 3
 config :bitcoin_network, max_peers: 125
-config :bitcoin_network, ping_time: 5_000
+config :bitcoin_network, ping_time: 15_000
 config :bitcoin_network, timeout: 30_000
 
 config :logger,

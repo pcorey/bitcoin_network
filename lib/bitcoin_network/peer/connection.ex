@@ -114,7 +114,12 @@ defmodule BitcoinNetwork.Peer.Connection do
     do: {:ok, <<>>}
 
   defp recv(%{socket: socket}, length),
-    do: :gen_tcp.recv(socket, length)
+    do:
+      :gen_tcp.recv(
+        socket,
+        length,
+        Application.get_env(:bitcoin_network, :timeout)
+      )
 
   defp refresh_timeout(state = %{timer: nil}) do
     Map.put(
