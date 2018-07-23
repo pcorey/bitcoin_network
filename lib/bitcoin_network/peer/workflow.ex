@@ -32,10 +32,11 @@ defmodule BitcoinNetwork.Peer.Workflow do
   end
 
   def handle_payload(%Pong{}, state) do
-    Process.send_after(
-      self(),
+    :timer.apply_after(
+      Application.get_env(:bitcoin_network, :ping_time),
+      __MODULE__,
       :ping,
-      Application.get_env(:bitcoin_network, :ping_time)
+      [state.socket]
     )
 
     {:ok, state}
@@ -65,4 +66,9 @@ defmodule BitcoinNetwork.Peer.Workflow do
 
   def handle_payload(_payload, state),
     do: {:ok, state}
+
+  def ping(socket) do
+    nonce = :crypto.strong_rand_bytes(8)
+    Peer.send(%Ping{nonce: nonce}, socket)
+  end
 end

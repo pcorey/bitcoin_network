@@ -4,7 +4,7 @@ defmodule BitcoinNetwork.Peer.Connection do
   alias BitcoinNetwork.IP
   alias BitcoinNetwork.Peer
   alias BitcoinNetwork.Peer.Workflow
-  alias BitcoinNetwork.Protocol.{Message, Ping, Version}
+  alias BitcoinNetwork.Protocol.{Message, Version}
 
   require Logger
 
@@ -86,27 +86,14 @@ defmodule BitcoinNetwork.Peer.Connection do
          {:ok, _checksum} <- Message.verify_checksum(message, payload),
          {:ok, state} <- Workflow.handle_payload(payload, state) do
       GenServer.cast(self(), :recv)
-      {:noreply, refresh_timeout(state)}
+      {:noreply, state}
     else
       {:error, :unsupported_command} ->
         GenServer.cast(self(), :recv)
-        {:noreply, refresh_timeout(state)}
+        {:noreply, state}
 
       {:error, reason} ->
-        {:disconnect, reason, refresh_timeout(state)}
-    end
-  end
-
-  def handle_info(:timeout, state) do
-    {:disconnect, :timeout, state}
-  end
-
-  def handle_info(:ping, state) do
-    with nonce <- :crypto.strong_rand_bytes(8),
-         {:ok, _serialized} <- Peer.send(%Ping{nonce: nonce}, state.socket) do
-      {:noreply, state}
-    else
-      {:error, reason} -> {:disconnect, reason, state}
+        {:disconnect, reason, state}
     end
   end
 
@@ -120,21 +107,4 @@ defmodule BitcoinNetwork.Peer.Connection do
         length,
         Application.get_env(:bitcoin_network, :timeout)
       )
-
-  defp refresh_timeout(state = %{timer: nil}) do
-    Map.put(
-      state,
-      :timer,
-      Process.send_after(
-        self(),
-        :timeout,
-        Application.get_env(:bitcoin_network, :timeout)
-      )
-    )
-  end
-
-  defp refresh_timeout(state = %{timer: timer}) do
-    Process.cancel_timer(timer)
-    refresh_timeout(Map.put(state, :timer, nil))
-  end
 end
