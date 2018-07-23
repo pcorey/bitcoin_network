@@ -20,13 +20,15 @@ defmodule BitcoinNetwork.Protocol.GetAddrTest do
     getaddr = %GetAddr{}
 
     assert {:ok, packet} = File.read("test/fixtures/getaddr.bin")
-    assert {:ok, message, <<>>} = Message.parse(packet)
-    assert message.payload == getaddr
+    assert {:ok, _message, rest} = Message.parse(packet)
+    assert {:ok, payload, <<>>} = GetAddr.parse(rest)
+    assert payload == getaddr
   end
 
   test "serializes a getaddr struct" do
     assert {:ok, packet} = File.read("test/fixtures/getaddr.bin")
-    assert {:ok, message, <<>>} = Message.parse(packet)
-    assert packet =~ Protocol.serialize(message.payload)
+    assert {:ok, _message, rest} = Message.parse(packet)
+    assert {:ok, payload, <<>>} = GetAddr.parse(rest)
+    assert packet =~ Protocol.serialize(payload)
   end
 end

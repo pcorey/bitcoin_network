@@ -40,13 +40,15 @@ defmodule BitcoinNetwork.Protocol.VersionTest do
     }
 
     assert {:ok, packet} = File.read("test/fixtures/version.bin")
-    assert {:ok, message, <<>>} = Message.parse(packet)
-    assert message.payload == version
+    assert {:ok, _message, rest} = Message.parse(packet)
+    assert {:ok, payload, <<>>} = Version.parse(rest)
+    assert payload == version
   end
 
   test "serializes a version struct" do
     assert {:ok, packet} = File.read("test/fixtures/version.bin")
-    assert {:ok, message, <<>>} = Message.parse(packet)
-    assert packet =~ Protocol.serialize(message.payload)
+    assert {:ok, _message, rest} = Message.parse(packet)
+    assert {:ok, payload, <<>>} = Version.parse(rest)
+    assert packet =~ Protocol.serialize(payload)
   end
 end

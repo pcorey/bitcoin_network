@@ -20,13 +20,15 @@ defmodule BitcoinNetwork.Protocol.VerackTest do
     verack = %Verack{}
 
     assert {:ok, packet} = File.read("test/fixtures/verack.bin")
-    assert {:ok, message, <<>>} = Message.parse(packet)
-    assert message.payload == verack
+    assert {:ok, _message, rest} = Message.parse(packet)
+    assert {:ok, payload, <<>>} = Verack.parse(rest)
+    assert payload == verack
   end
 
   test "serializes a verack struct" do
     assert {:ok, packet} = File.read("test/fixtures/verack.bin")
-    assert {:ok, message, <<>>} = Message.parse(packet)
-    assert packet =~ Protocol.serialize(message.payload)
+    assert {:ok, _message, rest} = Message.parse(packet)
+    assert {:ok, payload, <<>>} = Verack.parse(rest)
+    assert packet =~ Protocol.serialize(payload)
   end
 end
