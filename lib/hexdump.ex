@@ -1,17 +1,17 @@
 defmodule Hexdump do
-  def to_string(data) when is_binary(data) do
-    data
-    |> :binary.bin_to_list()
-    |> Enum.chunk_every(16)
-    |> Enum.map(&Enum.chunk_every(&1, 8))
-    |> Enum.map(fn
-      [a] -> [a, []]
-      [a, b] -> [a, b]
-    end)
-    |> Enum.with_index()
-    |> Enum.map(&line_to_string/1)
-    |> Enum.join("\n")
-  end
+  def to_string(data) when is_binary(data),
+    do:
+      data
+      |> :binary.bin_to_list()
+      |> Enum.chunk_every(16)
+      |> Enum.map(&Enum.chunk_every(&1, 8))
+      |> Enum.map(fn
+        [a] -> [a, []]
+        [a, b] -> [a, b]
+      end)
+      |> Enum.with_index()
+      |> Enum.map(&line_to_string/1)
+      |> Enum.join("\n")
 
   def to_string(data),
     do: Kernel.inspect(data)

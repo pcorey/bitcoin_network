@@ -20,24 +20,27 @@ defmodule BitcoinNetwork.Protocol.MessageTest do
       }
     }
 
-    {:ok, packet} = File.read("test/fixtures/pong.bin")
-    {:ok, message, rest} = Message.parse(packet)
-    {:ok, payload, <<>>} = Pong.parse(rest)
+    assert {:ok, packet} = File.read("test/fixtures/pong.bin")
+    assert {:ok, message, rest} = Message.parse(packet)
+    assert {:ok, payload, <<>>} = Pong.parse(rest)
 
     assert %{message | payload: payload} == pong
   end
 
   test "serializes a pong struct into a packet" do
-    pong = Message.serialize(%Pong{nonce: <<161, 19, 187, 232, 82, 1, 40, 68>>})
+    assert {:ok, pong} =
+             Message.serialize(%Pong{
+               nonce: <<161, 19, 187, 232, 82, 1, 40, 68>>
+             })
 
-    {:ok, packet} = File.read("test/fixtures/pong.bin")
+    assert {:ok, packet} = File.read("test/fixtures/pong.bin")
     assert packet == pong
   end
 
   test "verifies a checksum" do
-    {:ok, packet} = File.read("test/fixtures/pong.bin")
-    {:ok, message, rest} = Message.parse(packet)
-    {:ok, payload, <<>>} = Pong.parse(rest)
+    assert {:ok, packet} = File.read("test/fixtures/pong.bin")
+    assert {:ok, message, rest} = Message.parse(packet)
+    assert {:ok, payload, <<>>} = Pong.parse(rest)
     assert Message.verify_checksum(message, payload)
   end
 end

@@ -38,14 +38,13 @@ defmodule BitcoinNetwork.Protocol.NetAddr do
 end
 
 defimpl BitcoinNetwork.Protocol, for: BitcoinNetwork.Protocol.NetAddr do
-  def serialize(net_addr) do
-    <<
+  def serialize(net_addr),
+    do: <<
       serialize_time(net_addr)::binary,
       serialize_services(net_addr)::binary,
       serialize_ip(net_addr)::binary,
       serialize_port(net_addr)::binary
     >>
-  end
 
   defp serialize_time(%{time: time}),
     do: <<time::32-little>>

@@ -33,12 +33,11 @@ defimpl BitcoinNetwork.Protocol, for: BitcoinNetwork.Protocol.Addr do
   alias BitcoinNetwork.Protocol
   alias BitcoinNetwork.Protocol.VarInt
 
-  def serialize(addr) do
-    <<
+  def serialize(addr),
+    do: <<
       serialize_count(addr)::binary,
       serialize_addr_list(addr)::binary
     >>
-  end
 
   defp serialize_count(%{count: count}),
     do: Protocol.serialize(%VarInt{value: count})

@@ -98,8 +98,8 @@ defimpl BitcoinNetwork.Protocol, for: BitcoinNetwork.Protocol.Version do
   alias BitcoinNetwork.Protocol
   alias BitcoinNetwork.Protocol.{VersionNetAddr, VarStr}
 
-  def serialize(version) do
-    <<
+  def serialize(version),
+    do: <<
       serialize_version(version)::binary,
       serialize_services(version)::binary,
       serialize_timestamp(version)::binary,
@@ -110,7 +110,6 @@ defimpl BitcoinNetwork.Protocol, for: BitcoinNetwork.Protocol.Version do
       serialize_start_height(version)::binary,
       serialize_relay(version)::binary
     >>
-  end
 
   defp serialize_version(%{version: version}),
     do: <<version::32-little>>

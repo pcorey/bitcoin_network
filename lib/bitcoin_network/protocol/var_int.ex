@@ -28,19 +28,15 @@ end
 defimpl BitcoinNetwork.Protocol, for: BitcoinNetwork.Protocol.VarInt do
   alias BitcoinNetwork.Protocol.VarInt
 
-  def serialize(%VarInt{value: value}) when value < 0xFD do
-    <<value::8-little>>
-  end
+  def serialize(%VarInt{value: value}) when value < 0xFD,
+    do: <<value::8-little>>
 
-  def serialize(%VarInt{value: value}) when value < 0xFFFF do
-    <<0xFD, value::16-little>>
-  end
+  def serialize(%VarInt{value: value}) when value < 0xFFFF,
+    do: <<0xFD, value::16-little>>
 
-  def serialize(%VarInt{value: value}) when value < 0xFFFFFFFF do
-    <<0xFE, value::32-little>>
-  end
+  def serialize(%VarInt{value: value}) when value < 0xFFFFFFFF,
+    do: <<0xFE, value::32-little>>
 
-  def serialize(%VarInt{value: value}) do
-    <<0xFF, value::64-little>>
-  end
+  def serialize(%VarInt{value: value}),
+    do: <<0xFF, value::64-little>>
 end

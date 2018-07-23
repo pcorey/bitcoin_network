@@ -31,13 +31,12 @@ defmodule BitcoinNetwork.Protocol.VersionNetAddr do
 end
 
 defimpl BitcoinNetwork.Protocol, for: BitcoinNetwork.Protocol.VersionNetAddr do
-  def serialize(version_net_addr) do
-    <<
+  def serialize(version_net_addr),
+    do: <<
       serialize_services(version_net_addr)::binary,
       serialize_ip(version_net_addr)::binary,
       serialize_port(version_net_addr)::binary
     >>
-  end
 
   defp serialize_services(%{services: services}),
     do: <<services::64-little>>

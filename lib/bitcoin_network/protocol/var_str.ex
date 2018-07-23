@@ -30,12 +30,11 @@ defimpl BitcoinNetwork.Protocol, for: BitcoinNetwork.Protocol.VarStr do
   alias BitcoinNetwork.Protocol
   alias BitcoinNetwork.Protocol.VarInt
 
-  def serialize(var_str) do
-    <<
+  def serialize(var_str),
+    do: <<
       serialize_length(var_str)::binary,
       var_str.value::binary
     >>
-  end
 
   defp serialize_length(%{value: value}),
     do: Protocol.serialize(%VarInt{value: String.length(value)})

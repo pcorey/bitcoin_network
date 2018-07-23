@@ -4,7 +4,7 @@ defmodule BitcoinNetwork.Application do
   def start(_type, _args) do
     {:ok, pid} =
       Supervisor.start_link(
-        [peer_supervisor],
+        [peer_supervisor()],
         strategy: :one_for_one
       )
 

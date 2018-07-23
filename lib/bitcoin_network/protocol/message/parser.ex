@@ -7,12 +7,8 @@ defmodule BitcoinNetwork.Protocol.Message.Parser do
          {:ok, size, rest} <- parse_size(rest),
          {:ok, checksum, rest} <- parse_checksum(rest) do
       {:ok,
-       %Message{
-         magic: magic,
-         command: command,
-         size: size,
-         checksum: checksum
-       }, rest}
+       %Message{magic: magic, command: command, size: size, checksum: checksum},
+       rest}
     end
   end
 
@@ -37,10 +33,10 @@ defmodule BitcoinNetwork.Protocol.Message.Parser do
   defp parse_checksum(_binary),
     do: {:error, :bad_checksum}
 
-  defp trim_null_bytes(string) do
-    string
-    |> :binary.bin_to_list()
-    |> Enum.reject(&(&1 == 0))
-    |> :binary.list_to_bin()
-  end
+  defp trim_null_bytes(string),
+    do:
+      string
+      |> :binary.bin_to_list()
+      |> Enum.reject(&(&1 == 0))
+      |> :binary.list_to_bin()
 end

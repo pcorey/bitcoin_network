@@ -17,11 +17,10 @@ defmodule BitcoinNetwork.Protocol.Pong do
 end
 
 defimpl BitcoinNetwork.Protocol, for: BitcoinNetwork.Protocol.Pong do
-  def serialize(pong) do
-    <<
+  def serialize(pong),
+    do: <<
       serialize_nonce(pong)::binary
     >>
-  end
 
   defp serialize_nonce(%{nonce: nonce}),
     do: <<nonce::binary-size(8)>>
