@@ -4,8 +4,12 @@ defmodule BitcoinNetwork.Peer.Workflow do
   alias BitcoinNetwork.Protocol.{
     Addr,
     GetAddr,
+    GetData,
+    Inv,
+    NotFound,
     Ping,
     Pong,
+    Tx,
     Verack,
     Version
   }
@@ -60,6 +64,62 @@ defmodule BitcoinNetwork.Peer.Workflow do
     addr_list
     |> Enum.sort_by(& &1.time, &>=/2)
     |> Enum.map(&BitcoinNetwork.connect_to_node/1)
+
+    {:ok, state}
+  end
+
+  def handle_payload(%Inv{count: count, inventory: inventory}, state) do
+    Logger.info(
+      [
+        :reset,
+        "Received ",
+        :bright,
+        :green,
+        "#{count}",
+        :reset,
+        " inventory items."
+      ]
+      |> IO.ANSI.format()
+      |> IO.chardata_to_string()
+    )
+
+    Peer.send(%GetData{count: count, inventory: inventory}, state.socket)
+
+    {:ok, state}
+  end
+
+  def handle_payload(%NotFound{count: count}, state) do
+    Logger.info(
+      [
+        :reset,
+        "Couldn't find ",
+        :bright,
+        :yellow,
+        "#{count}",
+        :reset,
+        " inventory items."
+      ]
+      |> IO.ANSI.format()
+      |> IO.chardata_to_string()
+    )
+
+    {:ok, state}
+  end
+
+  def handle_payload(tx = %Tx{}, state) do
+    Logger.info(
+      [
+        :reset,
+        "Received ",
+        :bright,
+        :green,
+        "tx",
+        :reset,
+        "."
+      ]
+      |> IO.ANSI.format()
+      |> IO.chardata_to_string()
+    )
 
     {:ok, state}
   end

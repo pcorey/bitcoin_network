@@ -4,9 +4,13 @@ defmodule BitcoinNetwork.Protocol.Message do
   alias BitcoinNetwork.Protocol.{
     Addr,
     GetAddr,
+    GetData,
+    Inv,
     Message,
+    NotFound,
     Ping,
     Pong,
+    Tx,
     Verack,
     Version
   }
@@ -32,11 +36,23 @@ defmodule BitcoinNetwork.Protocol.Message do
   def parse_payload_module("getaddr"),
     do: {:ok, GetAddr}
 
+  def parse_payload_module("getdata"),
+    do: {:ok, GetData}
+
+  def parse_payload_module("inv"),
+    do: {:ok, Inv}
+
+  def parse_payload_module("notfound"),
+    do: {:ok, NotFound}
+
   def parse_payload_module("ping"),
     do: {:ok, Ping}
 
   def parse_payload_module("pong"),
     do: {:ok, Pong}
+
+  def parse_payload_module("tx"),
+    do: {:ok, Tx}
 
   def parse_payload_module("verack"),
     do: {:ok, Verack}
