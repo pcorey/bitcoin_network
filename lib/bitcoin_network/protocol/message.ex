@@ -1,8 +1,15 @@
 defmodule BitcoinNetwork.Protocol.Message do
+  defstruct magic: nil,
+            command: nil,
+            size: nil,
+            checksum: nil,
+            payload: nil
+
   alias BitcoinNetwork.Protocol.Message
 
   alias BitcoinNetwork.Protocol.{
     Addr,
+    Binary,
     GetAddr,
     GetData,
     Inv,
@@ -11,80 +18,81 @@ defmodule BitcoinNetwork.Protocol.Message do
     Ping,
     Pong,
     Tx,
+    UInt32T,
     Verack,
     Version
   }
 
-  defstruct magic: nil,
-            command: nil,
-            size: nil,
-            checksum: nil,
-            payload: nil
+  import BitcoinNetwork.Protocol.Serialize, only: [serialize: 1]
 
   def verify_checksum(message, payload),
     do: Message.Checksum.verify_checksum(message, payload)
 
-  def parse(binary),
-    do: Message.Parser.parse(binary)
+  def command(),
+    do: "message"
 
-  def serialize(payload),
-    do: Message.Serializer.serialize(payload)
+  def parse(binary) do
+    with {:ok, magic, rest} <- UInt32T.parse(binary),
+         {:ok, command, rest} <- Binary.parse(rest, 12),
+         {:ok, size, rest} <- UInt32T.parse(rest),
+         {:ok, checksum, rest} <- UInt32T.parse(rest),
+         do:
+           {:ok,
+            %Message{
+              magic: magic,
+              command: command,
+              size: size,
+              checksum: checksum
+            }, rest}
+  end
 
-  def parse_payload_module("addr"),
+  def new(message = %module{}, magic \\ 118_034_699) do
+    payload = serialize(message)
+    checksum = Message.Checksum.checksum(payload)
+    command = apply(module, :command, [])
+
+    %Message{
+      magic: UInt32T.new(magic),
+      command: Binary.new(command, 12),
+      size: UInt32T.new(byte_size(payload)),
+      checksum: UInt32T.new(checksum),
+      payload: Binary.new(payload)
+    }
+  end
+
+  def parse_payload_module(<<"addr", _::binary>>),
     do: {:ok, Addr}
 
-  def parse_payload_module("getaddr"),
+  def parse_payload_module(<<"getaddr", _::binary>>),
     do: {:ok, GetAddr}
 
-  def parse_payload_module("getdata"),
+  def parse_payload_module(<<"getdata", _::binary>>),
     do: {:ok, GetData}
 
-  def parse_payload_module("inv"),
+  def parse_payload_module(<<"inv", _::binary>>),
     do: {:ok, Inv}
 
-  def parse_payload_module("notfound"),
+  def parse_payload_module(<<"message", _::binary>>),
+    do: {:ok, Message}
+
+  def parse_payload_module(<<"notfound", _::binary>>),
     do: {:ok, NotFound}
 
-  def parse_payload_module("ping"),
+  def parse_payload_module(<<"ping", _::binary>>),
     do: {:ok, Ping}
 
-  def parse_payload_module("pong"),
+  def parse_payload_module(<<"pong", _::binary>>),
     do: {:ok, Pong}
 
-  def parse_payload_module("tx"),
-    do: {:ok, Tx}
+  # def parse_payload_module(<<"tx", _::binary>>),
+  #   do: {:ok, Tx}
 
-  def parse_payload_module("verack"),
+  def parse_payload_module(<<"verack", _::binary>>),
     do: {:ok, Verack}
 
-  def parse_payload_module("version"),
+  def parse_payload_module(<<"version", _::binary>>),
     do: {:ok, Version}
 
-  def parse_payload_module(_command),
+  def parse_payload_module(_),
     do: {:error, :unsupported_command}
-end
-
-defimpl BitcoinNetwork.Protocol, for: BitcoinNetwork.Protocol.Message do
-  alias BitcoinNetwork.Protocol.Message
-
-  def serialize(%Message{command: command, payload: payload}),
-    do: <<
-      serialize_magic()::binary,
-      serialize_command(command)::binary,
-      serialize_size(payload)::binary,
-      serialize_checksum(payload)::binary,
-      payload::binary
-    >>
-
-  defp serialize_magic(),
-    do: Application.get_env(:bitcoin_network, :magic)
-
-  defp serialize_command(command),
-    do: String.pad_trailing(command, 12, <<0>>)
-
-  defp serialize_size(payload),
-    do: <<byte_size(payload)::32-little>>
-
-  defp serialize_checksum(payload),
-    do: Message.Checksum.checksum(payload)
 end

@@ -1,8 +1,7 @@
 defmodule BitcoinNetwork.Protocol.AddrTest do
   use ExUnit.Case
 
-  alias BitcoinNetwork.Protocol
-  alias BitcoinNetwork.Protocol.{Addr, Message, NetAddr}
+  alias BitcoinNetwork.Protocol.{Addr, Message, NetAddr, Serialize}
 
   @moduledoc """
   Tests in this module are based around the `test/fixtures/addr.bin` fixture
@@ -20,13 +19,18 @@ defmodule BitcoinNetwork.Protocol.AddrTest do
 
   test "parses a addr payload" do
     addr = %Addr{
-      count: 1,
+      count: %BitcoinNetwork.Protocol.VarInt{
+        prefix: <<>>,
+        value: %BitcoinNetwork.Protocol.UInt8T{value: 1}
+      },
       addr_list: [
         %NetAddr{
-          ip: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 71, 218, 66, 210>>,
-          port: 18333,
-          services: 13,
-          time: 1_528_146_756
+          ip: %BitcoinNetwork.Protocol.IP{
+            value: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 71, 218, 66, 210>>
+          },
+          port: %BitcoinNetwork.Protocol.UInt16T{value: 40263},
+          services: %BitcoinNetwork.Protocol.UInt64T{value: 13},
+          time: %BitcoinNetwork.Protocol.UInt32T{value: 1_528_146_756}
         }
       ]
     }
@@ -41,6 +45,6 @@ defmodule BitcoinNetwork.Protocol.AddrTest do
     assert {:ok, packet} = File.read("test/fixtures/addr.bin")
     assert {:ok, _message, rest} = Message.parse(packet)
     assert {:ok, payload, <<>>} = Addr.parse(rest)
-    assert packet =~ Protocol.serialize(payload)
+    assert packet =~ Serialize.serialize(payload)
   end
 end
