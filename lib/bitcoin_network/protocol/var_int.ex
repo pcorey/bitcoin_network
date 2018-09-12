@@ -1,42 +1,57 @@
 defmodule BitcoinNetwork.Protocol.VarInt do
-  defstruct value: nil
+  defstruct prefix: nil,
+            value: nil
 
-  alias BitcoinNetwork.Protocol.VarInt
+  alias BitcoinNetwork.Protocol.{
+    Binary,
+    UInt16T,
+    UInt32T,
+    UInt64T,
+    UInt8T,
+    VarInt
+  }
 
-  def parse(binary) do
-    with {:ok, value, rest} <- parse_value(binary) do
-      {:ok, %VarInt{value: value}, rest}
-    end
+  def parse(<<0xFF, binary::binary>>) do
+    with {:ok, value, rest} <- UInt64T.parse(binary),
+         do: {:ok, %VarInt{prefix: <<0xFF>>, value: value}, rest}
   end
 
-  def parse_value(<<0xFD, value::16-little, rest::binary>>),
-    do: {:ok, value, rest}
+  def parse(<<0xFE, binary::binary>>) do
+    with {:ok, value, rest} <- UInt32T.parse(binary),
+         do: {:ok, %VarInt{prefix: <<0xFE>>, value: value}, rest}
+  end
 
-  def parse_value(<<0xFE, value::32-little, rest::binary>>),
-    do: {:ok, value, rest}
+  def parse(<<0xFD, binary::binary>>) do
+    with {:ok, value, rest} <- UInt16T.parse(binary),
+         do: {:ok, %VarInt{prefix: <<0xFD>>, value: value}, rest}
+  end
 
-  def parse_value(<<0xFF, value::64-little, rest::binary>>),
-    do: {:ok, value, rest}
+  def parse(<<binary::binary>>) do
+    with {:ok, value, rest} <- UInt8T.parse(binary),
+         do: {:ok, %VarInt{prefix: <<>>, value: value}, rest}
+  end
 
-  def parse_value(<<value::8-little, rest::binary>>),
-    do: {:ok, value, rest}
+  def new(value) when value < 0xFD,
+    do: %VarInt{
+      prefix: Binary.new(<<>>),
+      value: UInt8T.new(value)
+    }
 
-  def parse_value(_binary),
-    do: {:error, :bad_value}
-end
+  def new(value) when value <= 0xFFFF,
+    do: %VarInt{
+      prefix: Binary.new(<<0xFD>>),
+      value: UInt16T.new(value)
+    }
 
-defimpl BitcoinNetwork.Protocol, for: BitcoinNetwork.Protocol.VarInt do
-  alias BitcoinNetwork.Protocol.VarInt
+  def new(value) when value <= 0xFFFFFFFF,
+    do: %VarInt{
+      prefix: Binary.new(<<0xFE>>),
+      value: UInt32T.new(value)
+    }
 
-  def serialize(%VarInt{value: value}) when value < 0xFD,
-    do: <<value::8-little>>
-
-  def serialize(%VarInt{value: value}) when value < 0xFFFF,
-    do: <<0xFD, value::16-little>>
-
-  def serialize(%VarInt{value: value}) when value < 0xFFFFFFFF,
-    do: <<0xFE, value::32-little>>
-
-  def serialize(%VarInt{value: value}),
-    do: <<0xFF, value::64-little>>
+  def new(value),
+    do: %VarInt{
+      prefix: Binary.new(<<0xFF>>),
+      value: UInt64T.new(value)
+    }
 end

@@ -1,8 +1,7 @@
 defmodule BitcoinNetwork.Protocol.PongTest do
   use ExUnit.Case
 
-  alias BitcoinNetwork.Protocol
-  alias BitcoinNetwork.Protocol.{Message, Pong}
+  alias BitcoinNetwork.Protocol.{Message, Pong, Serialize, UInt64T}
 
   @moduledoc """
   Tests in this module are based around the `test/fixtures/pong.bin` fixture
@@ -18,7 +17,7 @@ defmodule BitcoinNetwork.Protocol.PongTest do
 
   test "parses a pong payload" do
     pong = %Pong{
-      nonce: <<161, 19, 187, 232, 82, 1, 40, 68>>
+      nonce: %UInt64T{value: 4_911_176_849_251_046_305}
     }
 
     assert {:ok, packet} = File.read("test/fixtures/pong.bin")
@@ -31,6 +30,6 @@ defmodule BitcoinNetwork.Protocol.PongTest do
     assert {:ok, packet} = File.read("test/fixtures/pong.bin")
     assert {:ok, _message, rest} = Message.parse(packet)
     assert {:ok, payload, <<>>} = Pong.parse(rest)
-    assert packet =~ Protocol.serialize(payload)
+    assert packet =~ Serialize.serialize(payload)
   end
 end

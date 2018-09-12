@@ -1,12 +1,13 @@
 defmodule BitcoinNetwork.Protocol.Message.Checksum do
-  alias BitcoinNetwork.Protocol
-  alias BitcoinNetwork.Protocol.Message
+  alias BitcoinNetwork.Protocol.{Message, UInt32T}
+
+  import BitcoinNetwork.Protocol.Serialize, only: [serialize: 1]
+  import BitcoinNetwork.Protocol.Value, only: [value: 1]
 
   def verify_checksum(%Message{size: size, checksum: checksum}, payload) do
-    serialized_payload = Protocol.serialize(payload)
+    serialized_payload = serialize(payload)
 
-    case checksum(serialized_payload) == checksum &&
-           byte_size(serialized_payload) == size do
+    case checksum(serialized_payload) == checksum && byte_size(serialized_payload) == value(size) do
       true -> {:ok, checksum}
       false -> {:error, :bad_checksum}
     end
@@ -21,7 +22,7 @@ defmodule BitcoinNetwork.Protocol.Message.Checksum do
       |> hash(:sha256)
       |> hash(:sha256)
 
-    checksum
+    UInt32T.new(checksum)
   end
 
   defp hash(data, algorithm),

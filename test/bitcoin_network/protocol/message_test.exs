@@ -1,37 +1,32 @@
 defmodule BitcoinNetwork.Protocol.MessageTest do
   use ExUnit.Case
 
-  alias BitcoinNetwork.Protocol.{Message, Pong}
+  alias BitcoinNetwork.Protocol.{Message, Pong, Serialize}
 
   @moduledoc """
   Tests in this module are designed to verify that the "message" envelope
   correctly parse and serialize.
   """
 
-  test "parses a full pong packet" do
-    pong = %Message{
-      checksum: <<0x0D, 0x96, 0x88, 0xAC>>,
-      command: "pong",
-      magic: <<0x0B, 0x11, 0x09, 0x07>>,
-      size: 8,
-      # <<0xA1, 0x13, 0xBB, 0xE8, 0x52, 0x1, 0x28, 0x44>>
-      payload: %Pong{
-        nonce: <<161, 19, 187, 232, 82, 1, 40, 68>>
-      }
-    }
+  test "parses a message packet" do
+    message =
+      4_911_176_849_251_046_305
+      |> BitcoinNetwork.Protocol.Pong.new()
+      |> Message.new()
+      |> Map.put(:payload, nil)
 
     assert {:ok, packet} = File.read("test/fixtures/pong.bin")
-    assert {:ok, message, rest} = Message.parse(packet)
-    assert {:ok, payload, <<>>} = Pong.parse(rest)
+    assert {:ok, parsed, _rest} = Message.parse(packet)
 
-    assert %{message | payload: payload} == pong
+    assert parsed == message
   end
 
   test "serializes a pong struct into a packet" do
-    assert {:ok, pong} =
-             Message.serialize(%Pong{
-               nonce: <<161, 19, 187, 232, 82, 1, 40, 68>>
-             })
+    assert pong =
+             4_911_176_849_251_046_305
+             |> BitcoinNetwork.Protocol.Pong.new()
+             |> Message.new()
+             |> Serialize.serialize()
 
     assert {:ok, packet} = File.read("test/fixtures/pong.bin")
     assert packet == pong
@@ -40,7 +35,7 @@ defmodule BitcoinNetwork.Protocol.MessageTest do
   test "verifies a checksum" do
     assert {:ok, packet} = File.read("test/fixtures/pong.bin")
     assert {:ok, message, rest} = Message.parse(packet)
-    assert {:ok, payload, <<>>} = Pong.parse(rest)
-    assert Message.verify_checksum(message, payload)
+    assert {:ok, pong, <<>>} = Pong.parse(rest)
+    assert Message.verify_checksum(message, pong)
   end
 end

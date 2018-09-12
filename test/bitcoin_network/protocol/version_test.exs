@@ -1,8 +1,7 @@
 defmodule BitcoinNetwork.Protocol.VersionTest do
   use ExUnit.Case
 
-  alias BitcoinNetwork.Protocol
-  alias BitcoinNetwork.Protocol.{Message, Version}
+  alias BitcoinNetwork.Protocol.{Message, Version, Serialize}
 
   @moduledoc """
   Tests in this module are based around the `test/fixtures/version.bin` fixture
@@ -23,20 +22,53 @@ defmodule BitcoinNetwork.Protocol.VersionTest do
   """
 
   test "parses a version payload" do
-    version = %Version{
-      version: 70015,
-      services: 13,
-      timestamp: 1_528_146_756,
-      recv_ip: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 160, 16, 233, 215>>,
-      recv_port: 18333,
-      recv_services: 9,
-      from_ip: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
-      from_port: 0,
-      from_services: 13,
-      nonce: 15_116_783_876_185_394_608,
-      user_agent: "/Satoshi:0.14.2/",
-      start_height: 1_322_730,
-      relay: 1
+    # version = %Version{
+    #   version: 70015,
+    #   services: 13,
+    #   timestamp: 1_528_146_756,
+    #   addr_recv: %VersionNetAddr{
+    #     ip: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 160, 16, 233, 215>>,
+    #     port: 18333,
+    #     services: 9
+    #   },
+    #   addr_from: %VersionNetAddr{
+    #     ip: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>,
+    #     port: 0,
+    #     services: 13
+    #   },
+    #   nonce: 15_116_783_876_185_394_608,
+    #   user_agent: "/Satoshi:0.14.2/",
+    #   start_height: 1_322_730,
+    #   relay: 1
+    # }
+    version = %BitcoinNetwork.Protocol.Version{
+      addr_from: %BitcoinNetwork.Protocol.VersionNetAddr{
+        ip: %BitcoinNetwork.Protocol.IP{value: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0>>},
+        port: %BitcoinNetwork.Protocol.UInt16T{value: 0},
+        services: %BitcoinNetwork.Protocol.UInt64T{value: 13}
+      },
+      addr_recv: %BitcoinNetwork.Protocol.VersionNetAddr{
+        ip: %BitcoinNetwork.Protocol.IP{
+          value: <<0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 160, 16, 233, 215>>
+        },
+        port: %BitcoinNetwork.Protocol.UInt16T{value: 40263},
+        services: %BitcoinNetwork.Protocol.UInt64T{value: 9}
+      },
+      nonce: %BitcoinNetwork.Protocol.UInt64T{value: 15_116_783_876_185_394_608},
+      relay: true,
+      services: %BitcoinNetwork.Protocol.UInt64T{
+        value: 13
+      },
+      start_height: %BitcoinNetwork.Protocol.Int32T{value: 1_322_730},
+      timestamp: %BitcoinNetwork.Protocol.UInt64T{value: 1_528_146_756},
+      user_agent: %BitcoinNetwork.Protocol.VarStr{
+        length: %BitcoinNetwork.Protocol.VarInt{
+          prefix: <<>>,
+          value: %BitcoinNetwork.Protocol.UInt8T{value: 16}
+        },
+        value: "/Satoshi:0.14.2/"
+      },
+      version: %BitcoinNetwork.Protocol.Int32T{value: 70015}
     }
 
     assert {:ok, packet} = File.read("test/fixtures/version.bin")
@@ -49,6 +81,6 @@ defmodule BitcoinNetwork.Protocol.VersionTest do
     assert {:ok, packet} = File.read("test/fixtures/version.bin")
     assert {:ok, _message, rest} = Message.parse(packet)
     assert {:ok, payload, <<>>} = Version.parse(rest)
-    assert packet =~ Protocol.serialize(payload)
+    assert packet =~ Serialize.serialize(payload)
   end
 end

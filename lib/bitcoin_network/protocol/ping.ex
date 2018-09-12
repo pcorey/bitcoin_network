@@ -1,27 +1,13 @@
 defmodule BitcoinNetwork.Protocol.Ping do
-  defstruct nonce: 0
+  defstruct nonce: nil
 
-  alias BitcoinNetwork.Protocol.Ping
+  alias BitcoinNetwork.Protocol.{Ping, UInt64T}
+
+  def command(),
+    do: "ping"
 
   def parse(binary) do
-    with {:ok, nonce, rest} <- parse_nonce(binary) do
-      {:ok, %Ping{nonce: nonce}, rest}
-    end
+    with {:ok, nonce, rest} <- UInt64T.parse(binary),
+         do: {:ok, %Ping{nonce: nonce}, rest}
   end
-
-  defp parse_nonce(<<nonce::binary-size(8), rest::binary>>),
-    do: {:ok, nonce, rest}
-
-  defp parse_nonce(_binary),
-    do: {:error, :bad_nonce}
-end
-
-defimpl BitcoinNetwork.Protocol, for: BitcoinNetwork.Protocol.Ping do
-  def serialize(ping),
-    do: <<
-      serialize_nonce(ping)::binary
-    >>
-
-  defp serialize_nonce(%{nonce: nonce}),
-    do: <<nonce::binary-size(8)>>
 end

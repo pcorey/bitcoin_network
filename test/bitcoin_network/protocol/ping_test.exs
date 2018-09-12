@@ -1,8 +1,7 @@
 defmodule BitcoinNetwork.Protocol.PingTest do
   use ExUnit.Case
 
-  alias BitcoinNetwork.Protocol
-  alias BitcoinNetwork.Protocol.{Message, Ping}
+  alias BitcoinNetwork.Protocol.{Message, Ping, Serialize, UInt64T}
 
   @moduledoc """
   Tests in this module are based around the `test/fixtures/ping.bin` fixture
@@ -18,7 +17,7 @@ defmodule BitcoinNetwork.Protocol.PingTest do
 
   test "parses a ping payload" do
     ping = %Ping{
-      nonce: <<196, 235, 79, 217, 33, 187, 32, 234>>
+      nonce: %UInt64T{value: 16_870_689_958_184_086_468}
     }
 
     assert {:ok, packet} = File.read("test/fixtures/ping.bin")
@@ -31,6 +30,6 @@ defmodule BitcoinNetwork.Protocol.PingTest do
     assert {:ok, packet} = File.read("test/fixtures/ping.bin")
     assert {:ok, _message, rest} = Message.parse(packet)
     assert {:ok, payload, <<>>} = Ping.parse(rest)
-    assert packet =~ Protocol.serialize(payload)
+    assert packet =~ Serialize.serialize(payload)
   end
 end

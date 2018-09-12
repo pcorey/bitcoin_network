@@ -1,8 +1,7 @@
 defmodule BitcoinNetwork.Protocol.GetAddrTest do
   use ExUnit.Case
 
-  alias BitcoinNetwork.Protocol
-  alias BitcoinNetwork.Protocol.{Message, GetAddr}
+  alias BitcoinNetwork.Protocol.{Message, GetAddr, Serialize}
 
   @moduledoc """
   Tests in this module are based around the `test/fixtures/getaddr.bin` fixture
@@ -29,6 +28,6 @@ defmodule BitcoinNetwork.Protocol.GetAddrTest do
     assert {:ok, packet} = File.read("test/fixtures/getaddr.bin")
     assert {:ok, _message, rest} = Message.parse(packet)
     assert {:ok, payload, <<>>} = GetAddr.parse(rest)
-    assert packet =~ Protocol.serialize(payload)
+    assert packet =~ Serialize.serialize(payload)
   end
 end

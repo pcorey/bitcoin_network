@@ -3,14 +3,9 @@ defmodule BitcoinNetwork.Protocol.Verack do
 
   alias BitcoinNetwork.Protocol.Verack
 
-  def parse(<<>>),
-    do: {:ok, %Verack{}, <<>>}
+  def command(),
+    do: "verack"
 
-  def parse(_binary),
-    do: {:error, :bad_verack}
-end
-
-defimpl BitcoinNetwork.Protocol, for: BitcoinNetwork.Protocol.Verack do
-  def serialize(_verack),
-    do: <<>>
+  def parse(binary),
+    do: {:ok, %Verack{}, binary}
 end
